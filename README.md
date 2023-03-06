@@ -5,13 +5,12 @@
          alt="Image of Fiddler logo"/>
 </div>
 
-# Getting Started
 
-This repo ckage contains tutorials, samples, and documentation for using Fiddler.
+This repo ckage contains example notebooks and accompanying documentation for using Fiddler.
 
 
 <a name="examples"></a>
-# Examples:
+# Examples
 *The goal of these examples books is to show you how to walkthrough installation, monitoring, and model upload of Fiddler using different model frameworks and data types. You can also use these as a reference guide to upload your dataset and model along with production traffic that you want to monitor, into Fiddler.*
 
    
