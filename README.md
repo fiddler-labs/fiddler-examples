@@ -6,8 +6,7 @@
 </div>
 
 
-This repo ckage contains example notebooks and accompanying documentation for using Fiddler.
-
+This repo contains example notebooks and accompanying documentation for using Fiddler.
 
 <a name="examples"></a>
 # Examples
