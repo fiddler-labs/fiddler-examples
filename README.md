@@ -12,7 +12,7 @@ This repo contains example notebooks and accompanying documentation for using Fi
 # Examples
 *The goal of these examples books is to show you how to walkthrough installation, monitoring, and model upload of Fiddler using different model frameworks and data types. You can also use these as a reference guide to upload your dataset and model along with production traffic that you want to monitor, into Fiddler.*
 
-To get started sing up for a free trial of [Fiddler](https://www.fiddler.ai/trial) now.  
+ ### To get started sing up for a free trial of [Fiddler](https://www.fiddler.ai/trial) now.  
 
 This repo contains the projects listed below. You can launch them in a google collab enviroment right from here:
 
