@@ -37,11 +37,12 @@ See LICENSE File for details.
 ```
 
 <a name="i-want-to-know-more"></a>
-# I want to know more!
+# Want to learn more?
 
 Here are some links that you will find useful:
 * **[Documentation](https://docs.fiddler.ai/)**
 * **[Fiddler Slack](https://fiddler-community.slack.com/)**
+
 
 
 
