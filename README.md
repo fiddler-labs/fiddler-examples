@@ -20,9 +20,9 @@ This repo contains the projects listed below. You can launch them in a google co
 
 ## The Basics
   1.  [Model Monitoring Quickstart with Sample Data](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Simple_Monitoring.ipynb)
-  2.  [XAI with Surrogate Models](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Surrogate_XAI.ipynb)
-  3.  [Adding Model Artifacts for XAI](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Add_Model_Artifact.ipynb)
-  4.  [Model Monitoring with your own Data](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_DIY.ipynb)
+  2.  [Model Monitoring with your own Data](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_DIY.ipynb)
+  3.  [XAI with Surrogate Models](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Surrogate_XAI.ipynb)
+  4.  [Adding Model Artifacts for XAI](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Add_Model_Artifact.ipynb)
 ## Use Case Specfifc 
   1. [Image/Computer Vision Model Monitoring ](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Image_Monitoring.ipynb)
   2. [NLP Model Monitoring - Binary Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_Monitoring.ipynb)
