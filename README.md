@@ -10,7 +10,7 @@ This repo contains example notebooks and accompanying documentation for using Fi
 
 <a name="examples"></a>
 # Examples
-*The goal of these examples books is to show you how to walkthrough installation, monitoring, and model upload of Fiddler using different model frameworks and data types. You can also use these as a reference guide to upload your dataset and model along with production traffic that you want to monitor, into Fiddler.*
+*The goal of these examples notebooks provide a walkthrough of the installation, monitoring, and model upload of Fiddler using different model frameworks and data types. You can also use these as a reference guide to uploading your dataset and model along with production traffic that you want to monitor, into Fiddler.*
 
  ### To get started  
  1. Sing up for a free trial of [Fiddler](https://www.fiddler.ai/trial).
@@ -23,7 +23,7 @@ This repo contains the projects listed below. You can launch them in a google co
   2.  [Model Monitoring with your own Data](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_DIY.ipynb)
   3.  [XAI with Surrogate Models](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Surrogate_XAI.ipynb)
   4.  [Adding Model Artifacts for XAI](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Add_Model_Artifact.ipynb)
-## Use Case Specfifc 
+## Use Case Specific  
   1. [Image/Computer Vision Model Monitoring ](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Image_Monitoring.ipynb)
   2. [NLP Model Monitoring - Binary Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_Monitoring.ipynb)
   3. [NLP Model Monitoring - Multiclass Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_multiclass.ipynb)
