@@ -16,7 +16,7 @@ This repo contains example notebooks and accompanying documentation for using Fi
  1. Sing up for a free trial of [Fiddler](https://www.fiddler.ai/trial).
  2. Use the projects in this repo to onboard models and data to illustrate model monitoring and explainability.  
 
-This repo contains the projects listed below. You can launch them in a google collab enviroment right from here:
+This repo contains the projects listed below. You can launch them in a google collab environment right from here:
 
 ## The Basics
   1.  [Model Monitoring Quickstart with Sample Data](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Simple_Monitoring.ipynb)
@@ -33,7 +33,7 @@ This repo contains the projects listed below. You can launch them in a google co
 # License
 
 ```
-See LICENSE File for details. 
+This project is licensed under the MIT license. See the LICENSE file for more info.
 ```
 
 <a name="i-want-to-know-more"></a>
