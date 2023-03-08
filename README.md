@@ -14,7 +14,7 @@ This repo contains example notebooks and accompanying documentation for using Fi
 
  ### To get started  
  1. Sing up for a free trial of [Fiddler](https://www.fiddler.ai/trial).
- 2. Then you can use the projected in this repo to Monitor Models, Explain thier outcomes and much more!  
+ 2. Use the projects in this repo to onboard models and data to illustrate model monitoring and explainability.  
 
 This repo contains the projects listed below. You can launch them in a google collab enviroment right from here:
 
@@ -43,10 +43,3 @@ Here are some links that you will find useful:
 * **[Documentation](https://docs.fiddler.ai/)**
 * **[Fiddler Slack](https://fiddler-community.slack.com/)**
 
-
-
-
-
-
-   
-   
