@@ -32,7 +32,7 @@ This repo contains the projects listed below. You can launch them in a google co
 <a name="license"></a>
 # License
 
-This project is licensed under the MIT license. See the LICENSE file for more info.
+This project is licensed under the MIT license. See the [LICENSE](https://github.com/fiddler-labs/fiddler-examples/blob/main/LICENSE) file for more info.
 
 
 <a name="i-want-to-know-more"></a>
