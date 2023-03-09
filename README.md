@@ -27,6 +27,7 @@ This repo contains the projects listed below. You can launch them in a google co
   1. [Image/Computer Vision Model Monitoring ](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Image_Monitoring.ipynb)
   2. [NLP Model Monitoring - Binary Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_Monitoring.ipynb)
   3. [NLP Model Monitoring - Multiclass Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_multiclass.ipynb)
+  4. [NLP Model Monitoring with OpenAI Embeddings](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_OpenAI_Monitoring.ipynb)
   4. [Class Imbalance Drift Detection](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Imbalanced_Data.ipynb)
    
 <a name="license"></a>
