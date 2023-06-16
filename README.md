@@ -28,7 +28,8 @@ This repo contains the projects listed below. You can launch them in a google co
   2. [NLP Model Monitoring - Binary Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_Monitoring.ipynb)
   3. [NLP Model Monitoring - Multiclass Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_multiclass.ipynb)
   4. [NLP Model Monitoring with OpenAI Embeddings](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_OpenAI_Monitoring.ipynb)
-  4. [Class Imbalance Drift Detection](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Imbalanced_Data.ipynb)
+  5. [Class Imbalance Drift Detection](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Imbalanced_Data.ipynb)
+  6. [Ranking Model - Monitoring and Explainability](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Ranking_Model.ipynb)
    
 <a name="license"></a>
 # License
