@@ -2,18 +2,18 @@
 
 <div align="left">
     <img src="quickstart/images/logo.png"
-         alt="Image of Fiddler logo"/>
+         alt="Image of Fiddler logo" width="200"/>
 </div>
 
-
+<br>
 This repo contains example notebooks and accompanying documentation for using Fiddler.
 
 <a name="examples"></a>
 # Examples
 *The goal of these example notebooks is to give you a quick start on various Fiddler capabilities, using different model frameworks and data types. You can also use these as a reference guide to upload your dataset and model along with production traffic that you want to monitor or explain using Fiddler.*
 
- ### To get started  
- 1. Sing up for a free trial of [Fiddler](https://www.fiddler.ai/trial).
+ ## To get started  
+ 1. Sign up for a free trial of [Fiddler](https://www.fiddler.ai/trial).
  2. Use the projects in this repo to onboard models and data to illustrate model monitoring and explainability.  
 
 This repo contains the projects listed below. You can launch them in a google collab environment right from here:
@@ -28,7 +28,8 @@ This repo contains the projects listed below. You can launch them in a google co
   2. [NLP Model Monitoring - Binary Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_Monitoring.ipynb)
   3. [NLP Model Monitoring - Multiclass Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_multiclass.ipynb)
   4. [NLP Model Monitoring with OpenAI Embeddings](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_OpenAI_Monitoring.ipynb)
-  4. [Class Imbalance Drift Detection](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Imbalanced_Data.ipynb)
+  5. [Class Imbalance Drift Detection](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Imbalanced_Data.ipynb)
+  6. [Ranking Model - Monitoring and Explainability](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Ranking_Model.ipynb)
    
 <a name="license"></a>
 # License
@@ -41,5 +42,5 @@ This project is licensed under the MIT license. See the [LICENSE](https://github
 
 Here are some links that you will find useful:
 * **[Documentation](https://docs.fiddler.ai/)**
-* **[Fiddler Slack](https://fiddler-community.slack.com/)**
+* **[Fiddler Slack](https://www.fiddler.ai/slackinvite)**
 
