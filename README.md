@@ -16,20 +16,20 @@ This repo contains example notebooks and accompanying documentation for using Fi
  1. Sign up for a free trial of [Fiddler](https://www.fiddler.ai/trial).
  2. Use the projects in this repo to onboard models and data to illustrate model monitoring and explainability.  
 
-This repo contains the projects listed below. You can launch them in a google collab environment right from here:
+This repo contains the projects listed below. You can launch them in a Google Collab environment right from here:
 
 ## The Basics
-  1.  [Model Monitoring Quickstart with Sample Data](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Simple_Monitoring.ipynb)
-  2.  [Model Monitoring with your own Data](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_DIY.ipynb)
-  3.  [XAI with Surrogate Models](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Surrogate_XAI.ipynb)
-  4.  [Adding Model Artifacts for XAI](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Add_Model_Artifact.ipynb)
+  1.  [Model Monitoring Quickstart with Sample Data](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Simple_Monitoring.ipynb) [![Open In Colab](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Simple_Monitoring.ipynb)
+  2.  [Model Monitoring with your own Data](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.5/Fiddler_Quickstart_DIY.ipynb) ![Open In Colab](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_DIY.ipynb)
+  3.  [XAI with Surrogate Models](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Surrogate_XAI.ipynb) ![Open In Colab](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Surrogate_XAI.ipynb)
+  4.  [Adding Model Artifacts for XAI](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Add_Model_Artifact.ipynb) ![Open In Colab](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Add_Model_Artifact.ipynb)
 ## Use Case Specific  
-  1. [Image/Computer Vision Model Monitoring ](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Image_Monitoring.ipynb)
-  2. [NLP Model Monitoring - Binary Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_Monitoring.ipynb)
-  3. [NLP Model Monitoring - Multiclass Classification](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_multiclass.ipynb)
-  4. [NLP Model Monitoring with OpenAI Embeddings](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_NLP_OpenAI_Monitoring.ipynb)
-  5. [Class Imbalance Drift Detection](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Imbalanced_Data.ipynb)
-  6. [Ranking Model - Monitoring and Explainability](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/Fiddler_Quickstart_Ranking_Model.ipynb)
+  1. [Image/Computer Vision Model Monitoring ](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Image_Monitoring.ipynb) ![Open In Colab](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Image_Monitoring.ipynb)
+  2. [NLP Model Monitoring - Binary Classification](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_NLP_Monitoring.ipynb) ![Open In Colab](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_NLP_Monitoring.ipynb)
+  3. [NLP Model Monitoring - Multiclass Classification](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_NLP_multiclass.ipynb) ![Open In Colab](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_NLP_multiclass.ipynb)
+  4. [NLP Model Monitoring with OpenAI Embeddings](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_NLP_OpenAI_Monitoring.ipynb) ![Open In Colab](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_NLP_OpenAI_Monitoring.ipynb)
+  5. [Class Imbalance Drift Detection](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Imbalanced_Data.ipynb) ![Open In Colab](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Imbalanced_Data.ipynb)
+  6. [Ranking Model - Monitoring and Explainability](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Ranking_Model.ipynb) ![Open In Colab](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Ranking_Model.ipynb)
    
 <a name="license"></a>
 # License
