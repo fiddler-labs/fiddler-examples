@@ -13,16 +13,13 @@ This repo contains example notebooks and accompanying documentation for using Fi
 *The goal of these example notebooks is to give you a quick start on various Fiddler capabilities, using different model frameworks and data types. You can also use these as a reference guide to upload your dataset and model along with production traffic that you want to monitor or explain using Fiddler.*
 
  ## To get started  
- 1. Sign up for a free trial of [Fiddler](https://www.fiddler.ai/trial).
- 2. Use the projects in this repo to onboard models and data to illustrate model monitoring and explainability.  
-
+Use the projects in this repo to onboard models and data to illustrate model monitoring and explainability.  
 This repo contains the projects listed below. You can launch them in a Google Collab environment right from here:
 
 ## The Basics
   1.  [Model Monitoring Quickstart with Sample Data](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Simple_Monitoring.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Simple_Monitoring.ipynb)
-  2.  [Model Monitoring with your own Data](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.5/Fiddler_Quickstart_DIY.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_DIY.ipynb)
-  3.  [XAI with Surrogate Models](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Surrogate_XAI.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Surrogate_XAI.ipynb)
-  4.  [Adding Model Artifacts for XAI](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Add_Model_Artifact.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Add_Model_Artifact.ipynb)
+  2.  [XAI with Surrogate Models](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Surrogate_XAI.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Surrogate_XAI.ipynb)
+  3.  [Adding Model Artifacts for XAI](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Add_Model_Artifact.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Add_Model_Artifact.ipynb)
 ## Use Case Specific  
   1. [Image/Computer Vision Model Monitoring ](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Image_Monitoring.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_Image_Monitoring.ipynb)
   2. [NLP Model Monitoring - Binary Classification](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_NLP_Monitoring.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/23.6/Fiddler_Quickstart_NLP_Monitoring.ipynb)
