@@ -1,13 +1,15 @@
 # Fiddler Utility Notebooks
 
-## Repository Purpose
+## Directory Purpose
 
-This repository serves as a centralized collection of utility notebooks for customer success engineers / field AI engineers. Unlike production code, these notebooks address specific one-time or occasional administrative needs that arise when supporting Fiddler deployments.
+This directory serves as a centralized collection of utility notebooks for solutions engineers / customer success engineers / field AI engineers. Unlike production code, these notebooks address specific one-time or occasional administrative needs that arise when supporting Fiddler deployments.
 Field engineers often develop scripts to solve unique challenges that may not warrant inclusion in the main product but are invaluable when similar situations arise with other customers.
 
-### General pre-requisites :
+*Note: This collection was previously maintained as a standalone repository (cs-utils) and is now integrated into the fiddler-examples repository as the misc-utils directory.*
+
+### General pre-requisites:
 - Fiddler instance URL and valid API token
-- Administrative access to view / edit ( may not be needed for every tool)
+- Administrative access to view / edit (may not be needed for every tool)
 
 
 ### Contributing Guidelines
