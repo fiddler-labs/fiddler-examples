@@ -117,6 +117,51 @@ A utility notebook for copying segment definitions between model versions:
 - Maintains segment configuration consistency across versions
 - Automates what would otherwise be manual segment recreation
 
+## create_dashboard_from_saved_charts.ipynb
+A utility for creating and organizing dashboards using existing charts:
+- Creates dashboards with specific chart arrangements using Fiddler's API
+- Positions charts in a customizable grid layout
+- Maps chart titles to their UUIDs for proper dashboard configuration
+- Sets the created dashboard as the default for a model
+
+**Prerequisites:**
+- Existing model with pre-created charts
+- Fiddler URL and valid API token
+
+**Key features:**
+- Supports precise positioning of charts in a grid (position_x, position_y, width, height)
+- Allows export/import of dashboard configurations via YAML
+- Converts chart titles to the required UUID format automatically
+- Sets time filters and timezone preferences
+
+**Usage notes:**
+- Useful for standardizing dashboards across similar models
+- Provides programmatic control over dashboard layout
+- Can be adapted for bulk dashboard creation
+
+## adding_charts.ipynb
+A utility for programmatically adding charts to Fiddler projects and models:
+- Uses Fiddler's API to create charts without using the UI
+- Extracts chart definitions from browser network requests
+- Handles mapping of project, model, and baseline IDs automatically
+- Supports custom metrics and segment-specific charts
+
+**Prerequisites:**
+- Fiddler URL and valid API token
+- Existing project and model
+- Chart definition (obtained from browser network inspection)
+
+**Key features:**
+- Preserves chart metadata including title, description, and visualization type
+- Configures time ranges and bin sizes for temporal charts
+- Maps segment names to their corresponding IDs
+- Supports custom metrics by name reference
+
+**Usage notes:**
+- Useful for bulk chart creation across multiple models
+- Enables chart replication between environments
+- Chart definitions can be captured from existing charts via browser dev tools
+- Chart definitions can be modified programmatically before creation
 
 ---
 
