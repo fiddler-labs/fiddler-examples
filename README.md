@@ -36,6 +36,10 @@ This repo contains the example notebooks listed below. You can launch them in a 
 * [Ranking Model - Monitoring](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb)
 * [Regression Model - Monitoring](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb)
 
+## Miscellaneous Utilities
+
+The [misc-utils](./misc-utils) directory contains utility notebooks for customer success engineers, field AI engineers, and solution engineers. These notebooks provide tools for various administrative tasks and solutions to common challenges when working with Fiddler deployments. See the [misc-utils README](./misc-utils/README.md) for a detailed catalog of available utilities.
+
 ## License
 
 This project is licensed under the MIT license. See the [LICENSE](https://github.com/fiddler-labs/fiddler-examples/blob/main/LICENSE) file for more info.
