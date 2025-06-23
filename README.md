@@ -19,6 +19,7 @@ This repo contains the example notebooks listed below. You can launch them in a 
 > **Note:** This repository uses Git Large File Storage (Git LFS) for managing large files. 
 > Please make sure you have Git LFS installed before cloning this repository. 
 > You can find installation instructions at [git-lfs.github.com](https://git-lfs.github.com/).
+> You can find the file types tracked via GitLFS at the `.gitattributes` file (currently only `.csv` files)
 
 ## The Basics
 
