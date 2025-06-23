@@ -75,7 +75,7 @@ logger = logging.getLogger(__name__)
 
 
 # Authentication credentials
-URL = 'https://fiddler.servicenow.com'
+URL = 'https://customer.fiddler.ai'
 TOKEN = 'ADD_YOUR_TOKEN_HERE'
 
 # Initialize Fiddler client
