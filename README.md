@@ -16,6 +16,11 @@ These example notebooks aim to give you a quick start on various Fiddler capabil
 Use the projects in this repo to onboard models and data to illustrate ML model and LLM application monitoring, analysis, and protection.
 This repo contains the example notebooks listed below. You can launch them in a Google Colab environment using the Colab links.
 
+> **Note:** This repository uses Git Large File Storage (Git LFS) for managing large files. 
+> Please make sure you have Git LFS installed before cloning this repository. 
+> You can find installation instructions at [git-lfs.github.com](https://git-lfs.github.com/).
+> You can find the file types tracked via GitLFS at the `.gitattributes` file (currently only `.csv` files)
+
 ## The Basics
 
 * [LLM - Comparison](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_LLM_Comparison.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_LLM_Comparison.ipynb)
@@ -31,6 +36,10 @@ This repo contains the example notebooks listed below. You can launch them in a 
 * [Class Imbalance Drift Detection](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Imbalanced_Data.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Imbalanced_Data.ipynb)
 * [Ranking Model - Monitoring](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb)
 * [Regression Model - Monitoring](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb)
+
+## Miscellaneous Utilities
+
+The [misc-utils](./misc-utils) directory contains utility notebooks for customer success engineers, field AI engineers, and solution engineers. These notebooks provide tools for various administrative tasks and solutions to common challenges when working with Fiddler deployments. See the [misc-utils README](./misc-utils/README.md) for a detailed catalog of available utilities.
 
 ## License
 
