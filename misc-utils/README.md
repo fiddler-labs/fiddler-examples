@@ -21,7 +21,7 @@ When adding a new notebook:
 
 ---
 
-## Notebook Catalog
+## Notebook and Script Catalog
 
 ### env_stats.ipynb
 
@@ -197,6 +197,34 @@ A utility for creating and organizing dashboards using existing charts:
 - Useful for standardizing dashboards across similar models
 - Provides programmatic control over dashboard layout
 - Can be adapted for bulk dashboard creation
+
+### check_schema_spec.py
+
+A utility script for validating consistency between model schema and specification:
+
+- Compares columns defined in the model schema with those referenced in the model specification
+- Identifies columns present in spec but missing from schema (potential issues)
+- Identifies columns present in schema but not referenced in spec (informational)
+- Provides detailed reporting on schema-spec alignment
+
+**Prerequisites:**
+
+- Fiddler URL and valid API token
+- Model ID of the model to validate
+
+**Key features:**
+
+- Validates all spec categories: inputs, outputs, targets, decisions, metadata, custom_features
+- Provides clear visual indicators (✅ for success, ⚠️ for warnings, ℹ️ for info)
+- Reports total column counts for both schema and spec
+- Lists specific column names for any discrepancies found
+
+**Usage notes:**
+
+- Essential for troubleshooting model configuration issues
+- Helps ensure data consistency and proper model monitoring setup
+- Can be run as a health check after model updates or schema changes
+- Useful for debugging publishing or monitoring issues related to column mismatches
 
 ### adding_charts.ipynb
 
