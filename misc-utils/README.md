@@ -255,6 +255,36 @@ A utility for programmatically adding charts to Fiddler projects and models:
 - Chart definitions can be captured from existing charts via browser dev tools
 - Chart definitions can be modified programmatically before creation
 
+### fetch_performance_metrics.ipynb
+
+A utility for fetching performance metrics for binary classification models from the Fiddler API:
+
+- Retrieves key performance metrics (accuracy, precision, recall, F1 score, AUC) via API
+- Supports different data sources (PRODUCTION, BASELINE, VALIDATION)
+- Exports metrics to CSV format for further analysis
+- Provides comprehensive error handling and user feedback
+
+**Prerequisites:**
+
+- Fiddler URL and valid API token
+- Model ID of the target binary classification model
+- Model must have performance data available in the specified environment
+
+**Key features:**
+
+- Uses the `/v3/analytics/metrics` API endpoint with POST requests
+- Handles both list and dictionary response formats from the API
+- Validates metric availability and reports missing metrics
+- Creates formatted CSV output with metric names and values
+- Includes detailed logging and status indicators
+
+**Usage notes:**
+
+- Designed specifically for binary classification models
+- Can be easily modified to support additional metric types
+- Useful for automated reporting and metric extraction workflows
+- CSV output can be integrated into broader analytics pipelines
+
 ---
 
 These notebooks demonstrate practical solutions for common Fiddler administrative tasks that might be encountered by customer success and field AI engineers.
