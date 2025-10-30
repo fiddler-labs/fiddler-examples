@@ -4,8 +4,9 @@ This module provides utilities for extracting, validating, and comparing
 model schemas across different Fiddler models.
 """
 
+from __future__ import annotations
 from dataclasses import dataclass
-from typing import Dict, List, Set, Optional, Any
+from typing import Dict, List, Set, Optional, Any, Tuple
 from enum import Enum
 import logging
 
@@ -56,7 +57,7 @@ class SchemaComparison:
     only_in_source: Set[str]
     only_in_target: Set[str]
     in_both: Set[str]
-    type_mismatches: Dict[str, tuple[Optional[str], Optional[str]]]
+    type_mismatches: Dict[str, Tuple[Optional[str], Optional[str]]]
     is_compatible: bool
 
     def __repr__(self) -> str:
@@ -73,6 +74,103 @@ class SchemaComparison:
 
 class SchemaValidator:
     """Validator for Fiddler model schemas."""
+
+    @staticmethod
+    def extract_custom_feature_names(custom_features: Any) -> Set[str]:
+        """Extract names from custom features (handles multiple formats).
+
+        This utility handles various formats of custom features:
+        - String: Direct name
+        - Dict: Extract 'name' key
+        - Object with .name attribute: Use attribute
+        - fdl.TextEmbedding: Use .name
+        - fdl.Enrichment: Use .name
+
+        Args:
+            custom_features: List of custom features in any supported format,
+                           or None/empty list
+
+        Returns:
+            Set of feature names
+
+        Example:
+            ```python
+            from fiddler_utils import SchemaValidator
+
+            # Handle mixed formats
+            features = [
+                'string_feature',
+                {'name': 'dict_feature'},
+                fdl.TextEmbedding(name='embedding_feature', ...)
+            ]
+            names = SchemaValidator.extract_custom_feature_names(features)
+            # Returns: {'string_feature', 'dict_feature', 'embedding_feature'}
+            ```
+        """
+        if custom_features is None:
+            return set()
+
+        if not isinstance(custom_features, (list, tuple)):
+            custom_features = [custom_features]
+
+        names = set()
+        for item in custom_features:
+            if isinstance(item, str):
+                # Direct string name
+                names.add(item)
+            elif isinstance(item, dict):
+                # Dictionary with 'name' key
+                names.add(item.get('name', str(item)))
+            elif hasattr(item, 'name'):
+                # Object with name attribute (TextEmbedding, Enrichment, etc.)
+                names.add(item.name)
+            else:
+                # Fallback: convert to string
+                names.add(str(item))
+
+        return names
+
+    @staticmethod
+    def get_column_role(column_name: str, model: fdl.Model) -> Optional[ColumnRole]:
+        """Determine the role of a column in a model spec.
+
+        Args:
+            column_name: Name of the column to check
+            model: Fiddler model object
+
+        Returns:
+            ColumnRole enum if found, None if column not in spec
+
+        Example:
+            ```python
+            from fiddler_utils import SchemaValidator
+
+            role = SchemaValidator.get_column_role('age', model)
+            if role == ColumnRole.INPUT:
+                print("'age' is an input column")
+            ```
+        """
+        spec = model.spec
+
+        if column_name in (spec.inputs or []):
+            return ColumnRole.INPUT
+        elif column_name in (spec.outputs or []):
+            return ColumnRole.OUTPUT
+        elif column_name in (spec.targets or []):
+            return ColumnRole.TARGET
+        elif column_name in (spec.metadata or []):
+            return ColumnRole.METADATA
+        elif hasattr(spec, 'decisions') and column_name in (spec.decisions or []):
+            return ColumnRole.DECISION
+        elif hasattr(spec, 'custom_features'):
+            # Check if column is a custom feature
+            custom_features = getattr(spec, 'custom_features', None)
+            if custom_features:
+                feature_names = SchemaValidator.extract_custom_feature_names(custom_features)
+                if column_name in feature_names:
+                    return ColumnRole.CUSTOM_FEATURE
+
+        return None
 
     @staticmethod
     def get_model_columns(model: fdl.Model) -> Dict[str, ColumnInfo]:
@@ -153,14 +251,16 @@ class SchemaValidator:
                 columns[col] = get_column_info(col, ColumnRole.DECISION)
 
         # Extract custom features (if present)
-        if hasattr(spec, 'custom_features') and spec.custom_features:
-            for cf in spec.custom_features:
-                col_name = cf.name if hasattr(cf, 'name') else str(cf)
+        custom_features = getattr(spec, 'custom_features', None)
+        if custom_features:
+            # Use utility method to extract names (handles multiple formats)
+            feature_names = SchemaValidator.extract_custom_feature_names(custom_features)
+            for col_name in feature_names:
                 columns[col_name] = get_column_info(col_name, ColumnRole.CUSTOM_FEATURE)
 
         logger.info(
-            f"Extracted {len(columns)} columns from model '{model.name}' "
-            f'(project: {model.project_id})'
+            f"[SchemaValidator] Extracted {len(columns)} columns from model '{model.name}' "
+            f"(project: {model.project_id})"
         )
         return columns
 
@@ -187,17 +287,18 @@ class SchemaValidator:
             columns.update(spec.metadata)
         if hasattr(spec, 'decisions') and spec.decisions:
             columns.update(spec.decisions)
-        if hasattr(spec, 'custom_features') and spec.custom_features:
-            for cf in spec.custom_features:
-                col_name = cf.name if hasattr(cf, 'name') else str(cf)
-                columns.add(col_name)
+
+        # Extract custom feature names using utility method
+        custom_features = getattr(spec, 'custom_features', None)
+        if custom_features:
+            columns.update(SchemaValidator.extract_custom_feature_names(custom_features))
 
         return columns
 
     @staticmethod
     def validate_columns(
         columns: Set[str], model: fdl.Model, strict: bool = True
-    ) -> tuple[bool, List[str]]:
+    ) -> Tuple[bool, List[str]]:
         """Validate that columns exist in a model schema.
 
         Args:
@@ -228,8 +329,8 @@ class SchemaValidator:
 
         if not is_valid:
             logger.warning(
-                f"Validation failed for model '{model.name}': "
-                f'{len(missing_columns)} missing columns: {missing_columns}'
+                f"[SchemaValidator] Validation failed for model '{model.name}': "
+                f"{len(missing_columns)} missing columns: {missing_columns}"
             )
 
             if strict:
@@ -273,7 +374,7 @@ class SchemaValidator:
         in_both = source_names & target_names
 
         # Check for type mismatches in common columns
-        type_mismatches = {}
+        type_mismatches: Dict[str, Tuple[Optional[str], Optional[str]]] = {}
         if strict:
             for col in in_both:
                 source_type = source_cols[col].data_type
@@ -297,10 +398,10 @@ class SchemaValidator:
         )
 
         logger.info(
-            f'Schema comparison: {len(in_both)} common columns, '
-            f'{len(only_in_source)} only in source, '
-            f'{len(only_in_target)} only in target, '
-            f'{len(type_mismatches)} type mismatches'
+            f"[SchemaValidator] Schema comparison: {len(in_both)} common columns, "
+            f"{len(only_in_source)} only in source, "
+            f"{len(only_in_target)} only in target, "
+            f"{len(type_mismatches)} type mismatches"
         )
 
         return comparison
@@ -308,7 +409,7 @@ class SchemaValidator:
     @staticmethod
     def validate_fql_expression(
         expression: str, model: fdl.Model, strict: bool = True
-    ) -> tuple[bool, List[str]]:
+    ) -> Tuple[bool, List[str]]:
         """Validate that an FQL expression is compatible with a model schema.
 
         Args:
@@ -378,8 +479,8 @@ class SchemaValidator:
 
         if missing:
             logger.warning(
-                f'Incompatible schemas: {len(missing)} columns missing in target: '
-                f'{missing}'
+                f"[SchemaValidator] Incompatible schemas: {len(missing)} columns missing in target: "
+                f"{missing}"
             )
             return False
 
@@ -395,8 +496,8 @@ class SchemaValidator:
                     and source_type.lower() != target_type.lower()
                 ):
                     logger.warning(
-                        f"Type mismatch for column '{col}': "
-                        f'source={source_type}, target={target_type}'
+                        f"[SchemaValidator] Type mismatch for column '{col}': "
+                        f"source={source_type}, target={target_type}"
                     )
                     # For now, just warn but don't fail
                     # Different Fiddler versions may have different type representations
