@@ -94,6 +94,17 @@ from .iteration import (
     count_models_by_project,
 )
 
+# Import public API - Model comparison
+from .comparison import (
+    ModelComparator,
+    ComparisonResult,
+    ComparisonConfig,
+    ConfigurationComparison,
+    SpecComparison,
+    AssetComparison,
+    ValueDifference,
+)
+
 # Import public API - Exceptions
 from .exceptions import (
     FiddlerUtilsError,
@@ -151,6 +162,14 @@ __all__ = [
     'iterate_projects_safe',
     'iterate_models_safe',
     'count_models_by_project',
+    # Model comparison
+    'ModelComparator',
+    'ComparisonResult',
+    'ComparisonConfig',
+    'ConfigurationComparison',
+    'SpecComparison',
+    'AssetComparison',
+    'ValueDifference',
     # Exceptions
     'FiddlerUtilsError',
     'ConnectionError',

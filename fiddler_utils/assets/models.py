@@ -5,6 +5,7 @@ definitions using the Model constructor pattern (not from_data()), enabling
 deterministic, programmatic model recreation.
 """
 
+from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from typing import Optional, List, Dict, Any, Set
 from enum import Enum
@@ -37,7 +38,7 @@ class UUIDEncoder(json.JSONEncoder):
     Converts UUID objects to strings during JSON serialization.
     This is the standard approach recommended by Python community.
     """
-    def default(self, obj):
+    def default(self, obj: Any) -> Any:
         if isinstance(obj, UUID):
             return str(obj)
         return super().default(obj)
@@ -90,7 +91,7 @@ class ModelExportData:
     columns: List[ColumnExportData]
     spec: Dict[str, List[str]]  # inputs, outputs, targets, metadata, decisions
     custom_features: List[Dict[str, Any]]
-    task: str
+    task: Optional[str]
     task_params: Optional[Dict[str, Any]]
     event_id_col: Optional[str]
     event_ts_col: Optional[str]
@@ -118,14 +119,36 @@ class ModelExportData:
         data['columns'] = columns
         return cls(**data)
 
-    def to_json(self, filepath: str, indent: int = 2):
-        """Save to JSON file with proper UUID handling.
+    def to_json(self, filepath: Optional[str] = None, indent: int = 2) -> str:
+        """Convert to JSON string or save to file with proper UUID handling.
 
         Uses custom UUIDEncoder to convert UUID objects to strings.
         This is the standard approach for handling UUIDs in JSON.
+
+        Args:
+            filepath: Optional path to save JSON file
+            indent: JSON indentation level
+
+        Returns:
+            JSON string representation
+
+        Example:
+            ```python
+            # Get JSON string
+            json_str = model_data.to_json()
+
+            # Save to file and get JSON string
+            json_str = model_data.to_json('model_export.json')
+            ```
         """
-        with open(filepath, 'w') as f:
-            json.dump(self.to_dict(), f, indent=indent, cls=UUIDEncoder)
+        json_str = json.dumps(self.to_dict(), indent=indent, cls=UUIDEncoder)
+
+        if filepath:
+            with open(filepath, 'w') as f:
+                f.write(json_str)
+            logger.info(f'Saved model export data to {filepath}')
+
+        return json_str
 
     @classmethod
     def from_json(cls, filepath: str) -> 'ModelExportData':
@@ -170,12 +193,66 @@ class ModelManager:
         """Initialize ModelManager."""
         self.baseline_manager = None  # Will be created when needed
 
-    def _get_baseline_manager(self):
+    def _get_baseline_manager(self) -> Any:
         """Lazy load BaselineManager to avoid circular imports."""
         if self.baseline_manager is None:
             from .baselines import BaselineManager
             self.baseline_manager = BaselineManager()
         return self.baseline_manager
+
+    @staticmethod
+    def _serialize_enum(enum_value: Any) -> Optional[str]:
+        """Safely serialize any enum to its name.
+
+        Handles enums with or without .name attribute, falling back to str().
+
+        Args:
+            enum_value: Enum value to serialize
+
+        Returns:
+            Enum name as string, or None if enum_value is None
+
+        Example:
+            ```python
+            task_str = ModelManager._serialize_enum(fdl.ModelTask.BINARY_CLASSIFICATION)
+            # Returns: "BINARY_CLASSIFICATION"
+            ```
+        """
+        if enum_value is None:
+            return None
+        return enum_value.name if hasattr(enum_value, 'name') else str(enum_value)
+
+    @staticmethod
+    def _deserialize_enum(enum_class: type, value: Optional[str]) -> Any:
+        """Safely deserialize string to enum.
+
+        Handles strings with or without enum class prefix (e.g., "ModelTask.LLM" or "LLM").
+
+        Args:
+            enum_class: Enum class to deserialize to
+            value: String value to deserialize, or None
+
+        Returns:
+            Enum instance, or None if value is None
+
+        Example:
+            ```python
+            task = ModelManager._deserialize_enum(fdl.ModelTask, "BINARY_CLASSIFICATION")
+            # Returns: fdl.ModelTask.BINARY_CLASSIFICATION
+
+            task = ModelManager._deserialize_enum(fdl.ModelTask, "ModelTask.LLM")
+            # Returns: fdl.ModelTask.LLM
+            ```
+        """
+        if value is None:
+            return None
+        # Remove enum class prefix if present (e.g., "ModelTask.LLM" -> "LLM")
+        clean_value = value.replace(f'{enum_class.__name__}.', '')
+
+        # Convert to uppercase (enum members are typically uppercase)
+        clean_value = clean_value.upper()
+
+        return getattr(enum_class, clean_value)
 
     def export_model(
         self,
@@ -254,7 +331,7 @@ class ModelManager:
             columns=columns,
             spec=spec_data,
             custom_features=custom_features,
-            task=model.task.name if hasattr(model.task, 'name') else str(model.task),  # Get enum name
+            task=self._serialize_enum(model.task),
             task_params=task_params,
             event_id_col=model.event_id_col,
             event_ts_col=model.event_ts_col,
@@ -389,7 +466,7 @@ class ModelManager:
         Returns:
             Dict with lists of exported assets by type
         """
-        related = {
+        related: Dict[str, List[Dict]] = {
             'segments': [],
             'custom_metrics': [],
             'alerts': []
@@ -448,6 +525,7 @@ class ModelManager:
         version_label: Optional[str] = None,
         create_baselines: bool = True,
         import_related_assets: bool = True,
+        validate_assets: bool = True,
     ) -> fdl.Model:
         """Import model to target project.
 
@@ -458,6 +536,8 @@ class ModelManager:
             version_label: Version label for 'create_version' mode
             create_baselines: Recreate baselines after model creation
             import_related_assets: Import segments, custom metrics, alerts
+            validate_assets: If True, validate asset column references against target model schema.
+                           Recommended to prevent import failures due to schema mismatches.
 
         Returns:
             Created/updated Fiddler Model object
@@ -504,22 +584,7 @@ class ModelManager:
         logger.debug(f'Reconstructed schema with {len(columns)} columns')
 
         # Reconstruct spec
-        custom_features = self._reconstruct_custom_features(model_data.custom_features)
-
-        # Build spec kwargs - only include custom_features if present
-        spec_kwargs = {
-            'inputs': model_data.spec['inputs'],
-            'outputs': model_data.spec['outputs'],
-            'targets': model_data.spec['targets'],
-            'metadata': model_data.spec['metadata'],
-            'decisions': model_data.spec.get('decisions', []),
-        }
-
-        # Only add custom_features if there are any (ModelSpec doesn't accept None)
-        if custom_features:
-            spec_kwargs['custom_features'] = custom_features
-
-        spec = fdl.ModelSpec(**spec_kwargs)
+        spec = self._reconstruct_spec(model_data)
         logger.debug('Reconstructed model spec')
 
         # Reconstruct task params
@@ -550,7 +615,7 @@ class ModelManager:
 
         # Import related assets
         if import_related_assets and model_data.related_assets:
-            self._import_related_assets(model.id, model_data.related_assets)
+            self._import_related_assets(model.id, model_data.related_assets, validate=validate_assets)
 
         # Warn about artifacts
         if model_data.has_artifacts:
@@ -659,22 +724,49 @@ class ModelManager:
 
         return params
 
-    def _parse_task_enum(self, task_str: str) -> fdl.ModelTask:
+    def _reconstruct_spec(self, model_data: ModelExportData) -> fdl.ModelSpec:
+        """Reconstruct ModelSpec from export data.
+
+        Args:
+            model_data: ModelExportData containing spec information
+
+        Returns:
+            Reconstructed fdl.ModelSpec object
+
+        Example:
+            ```python
+            spec = mgr._reconstruct_spec(model_data)
+            # Returns: ModelSpec with inputs, outputs, targets, etc.
+            ```
+        """
+        # Reconstruct custom features
+        custom_features = self._reconstruct_custom_features(model_data.custom_features)
+
+        # Build spec kwargs - only include custom_features if present
+        spec_kwargs = {
+            'inputs': model_data.spec['inputs'],
+            'outputs': model_data.spec['outputs'],
+            'targets': model_data.spec['targets'],
+            'metadata': model_data.spec['metadata'],
+            'decisions': model_data.spec.get('decisions', []),
+        }
+
+        # Only add custom_features if there are any (ModelSpec doesn't accept None)
+        if custom_features:
+            spec_kwargs['custom_features'] = custom_features
+
+        return fdl.ModelSpec(**spec_kwargs)
+
+    def _parse_task_enum(self, task_str: Optional[str]) -> Any:
         """Parse ModelTask enum from string.
 
         Args:
-            task_str: Task as string (e.g., 'BINARY_CLASSIFICATION', 'ModelTask.BINARY_CLASSIFICATION')
+            task_str: Task as string (e.g., 'BINARY_CLASSIFICATION', 'ModelTask.BINARY_CLASSIFICATION'), or None
 
         Returns:
-            fdl.ModelTask enum value
+            fdl.ModelTask enum value, or None if task_str is None
         """
-        # Remove 'ModelTask.' prefix if present
-        task_name = task_str.replace('ModelTask.', '')
-
-        # Convert to uppercase (enum members are uppercase)
-        task_name = task_name.upper()
-
-        return getattr(fdl.ModelTask, task_name)
+        return self._deserialize_enum(fdl.ModelTask, task_str)
 
     def _import_create_new(
         self,
@@ -741,7 +833,7 @@ class ModelManager:
         spec: fdl.ModelSpec,
         task: fdl.ModelTask,
         task_params: Optional[fdl.ModelTaskParams],
-        version_label: str
+        version_label: Optional[str]
     ) -> fdl.Model:
         """Import as new version of existing model.
 
@@ -842,7 +934,7 @@ class ModelManager:
 
         return existing_model
 
-    def _import_baselines(self, target_model_id: str, baselines_data: List[Dict[str, Any]]):
+    def _import_baselines(self, target_model_id: str, baselines_data: List[Dict[str, Any]]) -> None:
         """Import baselines to target model.
 
         Args:
@@ -873,7 +965,12 @@ class ModelManager:
 
         print(f"  Summary: {success_count} created, {skip_count} skipped, {fail_count} failed")
 
-    def _import_related_assets(self, target_model_id: str, related_assets: Dict[str, List[Dict]]):
+    def _import_related_assets(
+        self,
+        target_model_id: str,
+        related_assets: Dict[str, List[Dict]],
+        validate: bool = True
+    ) -> None:
         """Import related assets using existing asset managers.
 
         Reconstructs AssetExportData from serialized dicts and passes them to
@@ -882,12 +979,19 @@ class ModelManager:
         Args:
             target_model_id: Target model UUID
             related_assets: Dict of related assets by type (from export)
+            validate: If True, validate asset column references against target model schema
         """
         from .base import AssetExportData, AssetType
 
+        if validate:
+            logger.info("[ModelManager] Asset validation enabled: will check column references")
+        else:
+            logger.warning("[ModelManager] Asset validation disabled: skipping column reference checks")
+
         # Import segments
         if related_assets.get('segments'):
-            print(f"\nImporting {len(related_assets['segments'])} segments...")
+            validation_status = "with validation" if validate else "without validation"
+            print(f"\nImporting {len(related_assets['segments'])} segments ({validation_status})...")
             try:
                 from .segments import SegmentManager
                 segment_mgr = SegmentManager()
@@ -906,7 +1010,7 @@ class ModelManager:
                 result = segment_mgr.import_assets(
                     target_model_id=target_model_id,
                     assets=segment_assets,
-                    validate=False,
+                    validate=validate,
                     dry_run=False
                 )
                 print(f"  ✓ Created: {result.successful}, Skipped: {result.skipped}, Failed: {result.failed}")
@@ -919,7 +1023,8 @@ class ModelManager:
 
         # Import custom metrics
         if related_assets.get('custom_metrics'):
-            print(f"\nImporting {len(related_assets['custom_metrics'])} custom metrics...")
+            validation_status = "with validation" if validate else "without validation"
+            print(f"\nImporting {len(related_assets['custom_metrics'])} custom metrics ({validation_status})...")
             try:
                 from .metrics import CustomMetricManager
                 metric_mgr = CustomMetricManager()
@@ -937,7 +1042,7 @@ class ModelManager:
                 result = metric_mgr.import_assets(
                     target_model_id=target_model_id,
                     assets=metric_assets,
-                    validate=False,
+                    validate=validate,
                     dry_run=False
                 )
                 print(f"  ✓ Created: {result.successful}, Skipped: {result.skipped}, Failed: {result.failed}")
@@ -1035,22 +1140,13 @@ class ModelManager:
             print(f"Columns:")
             print(f"{'-'*60}")
 
-            # Group columns by role
-            column_roles = {}
-            for col_name in model.spec.inputs or []:
-                column_roles[col_name] = 'INPUT'
-            for col_name in model.spec.outputs or []:
-                column_roles[col_name] = 'OUTPUT'
-            for col_name in model.spec.targets or []:
-                column_roles[col_name] = 'TARGET'
-            for col_name in model.spec.metadata or []:
-                column_roles[col_name] = 'METADATA'
-            for col_name in model.spec.decisions or []:
-                column_roles[col_name] = 'DECISION'
+            # Print column details using SchemaValidator utility
+            from ..schema import SchemaValidator
 
-            # Print column details
             for col in schema_columns:
-                role = column_roles.get(col.name, 'UNKNOWN')
+                # Use utility to determine role
+                role_enum = SchemaValidator.get_column_role(col.name, model)
+                role = role_enum.value.upper() if role_enum else 'UNKNOWN'
                 data_type = str(col.data_type).replace('DataType.', '')
 
                 info_parts = [f"{col.name:<30}", f"{role:<10}", f"{data_type:<12}"]
@@ -1168,129 +1264,3 @@ class ModelManager:
             logger.error(f'Failed to get default dashboard for model {model_id}: {e}')
             raise FiddlerUtilsError(f'Failed to get default dashboard: {str(e)}')
 
-    def compare_models(
-        self,
-        source_model_id: str,
-        target_model_id: str,
-        detailed: bool = False
-    ) -> Dict[str, Any]:
-        """Compare two models and report differences.
-
-        Args:
-            source_model_id: Source model UUID
-            target_model_id: Target model UUID
-            detailed: Show detailed column-by-column comparison
-
-        Returns:
-            Dict with comparison results
-
-        Example:
-            ```python
-            comparison = mgr.compare_models(
-                source_model_id='abc123',
-                target_model_id='xyz789',
-                detailed=True
-            )
-            ```
-        """
-        source = fdl.Model.get(id_=source_model_id)
-        target = fdl.Model.get(id_=target_model_id)
-
-        print(f"\n{'='*60}")
-        print(f"Model Comparison")
-        print(f"{'='*60}")
-        print(f"Source: {source.name} (version: {source.version or 'none'})")
-        print(f"Target: {target.name} (version: {target.version or 'none'})")
-        print(f"{'='*60}\n")
-
-        comparison = {
-            'models_identical': True,
-            'differences': []
-        }
-
-        # Compare basic properties
-        if source.name != target.name:
-            comparison['models_identical'] = False
-            comparison['differences'].append(f"Name: '{source.name}' → '{target.name}'")
-            print(f"✗ Name differs: '{source.name}' → '{target.name}'")
-
-        if source.version != target.version:
-            comparison['models_identical'] = False
-            comparison['differences'].append(f"Version: '{source.version}' → '{target.version}'")
-            print(f"✗ Version differs: '{source.version}' → '{target.version}'")
-
-        if source.task != target.task:
-            comparison['models_identical'] = False
-            comparison['differences'].append(f"Task: {source.task} → {target.task}")
-            print(f"✗ Task differs: {source.task} → {target.task}")
-
-        # Compare schema using SchemaValidator
-        try:
-            from ..schema import SchemaValidator
-
-            schema_comparison = SchemaValidator.compare_schemas(source, target)
-
-            if schema_comparison.added_columns:
-                comparison['models_identical'] = False
-                comparison['differences'].append(f"Added columns: {schema_comparison.added_columns}")
-                print(f"✗ Added columns: {schema_comparison.added_columns}")
-
-            if schema_comparison.removed_columns:
-                comparison['models_identical'] = False
-                comparison['differences'].append(f"Removed columns: {schema_comparison.removed_columns}")
-                print(f"✗ Removed columns: {schema_comparison.removed_columns}")
-
-            if schema_comparison.changed_columns:
-                comparison['models_identical'] = False
-                for col_name, changes in schema_comparison.changed_columns.items():
-                    comparison['differences'].append(f"Column '{col_name}' changed: {changes}")
-                    print(f"✗ Column '{col_name}' changed:")
-                    for change_type, change_val in changes.items():
-                        print(f"    {change_type}: {change_val}")
-
-            if schema_comparison.is_compatible:
-                print(f"✓ Schemas are compatible")
-            else:
-                print(f"✗ Schemas are NOT compatible")
-
-        except Exception as e:
-            logger.warning(f"Could not compare schemas: {e}")
-            print(f"⚠  Could not perform schema comparison: {e}")
-
-        # Compare spec (role assignments)
-        source_inputs = set(source.spec.inputs or [])
-        target_inputs = set(target.spec.inputs or [])
-        if source_inputs != target_inputs:
-            comparison['models_identical'] = False
-            added = target_inputs - source_inputs
-            removed = source_inputs - target_inputs
-            if added:
-                comparison['differences'].append(f"Added inputs: {added}")
-                print(f"✗ Added input columns: {added}")
-            if removed:
-                comparison['differences'].append(f"Removed inputs: {removed}")
-                print(f"✗ Removed input columns: {removed}")
-
-        source_outputs = set(source.spec.outputs or [])
-        target_outputs = set(target.spec.outputs or [])
-        if source_outputs != target_outputs:
-            comparison['models_identical'] = False
-            comparison['differences'].append(f"Outputs differ: {source_outputs} → {target_outputs}")
-            print(f"✗ Output columns differ: {source_outputs} → {target_outputs}")
-
-        source_targets = set(source.spec.targets or [])
-        target_targets = set(target.spec.targets or [])
-        if source_targets != target_targets:
-            comparison['models_identical'] = False
-            comparison['differences'].append(f"Targets differ: {source_targets} → {target_targets}")
-            print(f"✗ Target columns differ: {source_targets} → {target_targets}")
-
-        # Summary
-        print(f"\n{'-'*60}")
-        if comparison['models_identical']:
-            print(f"✓ Models are identical")
-        else:
-            print(f"✗ Models differ in {len(comparison['differences'])} ways")
-        print(f"{'-'*60}\n")
-
-        return comparison
