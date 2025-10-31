@@ -18,6 +18,7 @@ from .charts import ChartManager
 from .dashboards import DashboardManager
 from .models import ModelManager, ModelExportData, ColumnExportData
 from .baselines import BaselineManager
+from .feature_impact import FeatureImpactManager
 
 __all__ = [
     # Base classes
@@ -34,6 +35,7 @@ __all__ = [
     'DashboardManager',
     'ModelManager',
     'BaselineManager',
+    'FeatureImpactManager',
     # Model data classes
     'ModelExportData',
     'ColumnExportData',

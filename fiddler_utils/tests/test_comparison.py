@@ -277,32 +277,32 @@ class TestComparisonResultMethods:
     def test_to_dict(self):
         """Test to_dict conversion."""
         result = ComparisonResult(
-            model_a_name='model_a',
-            model_b_name='model_b'
+            source_model_name='model_a',
+            target_model_name='model_b'
         )
 
         data = result.to_dict()
-        assert data['model_a_name'] == 'model_a'
-        assert data['model_b_name'] == 'model_b'
+        assert data['source_model_name'] == 'model_a'
+        assert data['target_model_name'] == 'model_b'
         assert 'compared_at' in data
 
     def test_to_json_without_filepath(self):
         """Test to_json returns JSON string without saving."""
         result = ComparisonResult(
-            model_a_name='model_a',
-            model_b_name='model_b'
+            source_model_name='model_a',
+            target_model_name='model_b'
         )
 
         json_str = result.to_json()
         assert isinstance(json_str, str)
-        assert 'model_a_name' in json_str
+        assert 'source_model_name' in json_str
         assert 'model_b' in json_str
 
     def test_to_json_custom_indent(self):
         """Test to_json with custom indentation."""
         result = ComparisonResult(
-            model_a_name='test1',
-            model_b_name='test2'
+            source_model_name='test1',
+            target_model_name='test2'
         )
 
         json_str = result.to_json(indent=4)

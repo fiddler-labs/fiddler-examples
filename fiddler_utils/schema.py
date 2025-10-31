@@ -296,6 +296,102 @@ class SchemaValidator:
         return columns
 
     @staticmethod
+    def get_schema_column_names(model: fdl.Model) -> Set[str]:
+        """Extract column names from model schema.
+
+        Args:
+            model: Fiddler model object
+
+        Returns:
+            Set of column names defined in the model schema
+
+        Example:
+            ```python
+            from fiddler_utils import SchemaValidator
+
+            model = fdl.Model.from_name('my_model', project_id=project.id)
+            schema_cols = SchemaValidator.get_schema_column_names(model)
+            print(f"Schema has {len(schema_cols)} columns")
+            ```
+        """
+        schema = getattr(model, 'schema', None)
+        if not schema:
+            logger.warning(
+                f"[SchemaValidator] Model '{model.name}' has no schema attribute"
+            )
+            return set()
+
+        columns = getattr(schema, 'columns', [])
+        if not columns:
+            logger.warning(
+                f"[SchemaValidator] Model '{model.name}' schema has no columns"
+            )
+            return set()
+
+        return set(col.name for col in columns)
+
+    @staticmethod
+    def validate_spec_schema_consistency(model: fdl.Model) -> SchemaComparison:
+        """Validate that a model's spec and schema are in sync.
+
+        Checks that all columns referenced in the model spec (inputs, outputs,
+        targets, metadata, decisions, custom features) are present in the
+        model schema. Also identifies columns in the schema that are not
+        referenced in the spec.
+
+        Args:
+            model: Fiddler model object
+
+        Returns:
+            SchemaComparison object with:
+                - only_in_source: Columns in spec but missing from schema
+                - only_in_target: Columns in schema but not in spec
+                - in_both: Columns present in both spec and schema
+                - type_mismatches: Empty dict (type checking not applicable)
+                - is_compatible: True if all spec columns exist in schema
+
+        Example:
+            ```python
+            from fiddler_utils import SchemaValidator
+
+            model = fdl.Model.from_name('my_model', project_id=project.id)
+            comparison = SchemaValidator.validate_spec_schema_consistency(model)
+
+            if not comparison.is_compatible:
+                print(f"⚠️ Columns in spec but missing from schema:")
+                for col in comparison.only_in_source:
+                    print(f"  - {col}")
+            ```
+        """
+        spec_columns = SchemaValidator.get_column_names(model)
+        schema_columns = SchemaValidator.get_schema_column_names(model)
+
+        only_in_spec = spec_columns - schema_columns
+        only_in_schema = schema_columns - spec_columns
+        in_both = spec_columns & schema_columns
+
+        # Spec/schema comparison doesn't involve type checking
+        # (spec doesn't define types, schema does)
+        is_compatible = len(only_in_spec) == 0
+
+        comparison = SchemaComparison(
+            only_in_source=only_in_spec,
+            only_in_target=only_in_schema,
+            in_both=in_both,
+            type_mismatches={},
+            is_compatible=is_compatible,
+        )
+
+        logger.info(
+            f"[SchemaValidator] Spec/schema validation for model '{model.name}': "
+            f"{len(in_both)} in both, "
+            f"{len(only_in_spec)} missing from schema, "
+            f"{len(only_in_schema)} extra in schema"
+        )
+
+        return comparison
+
+    @staticmethod
     def validate_columns(
         columns: Set[str], model: fdl.Model, strict: bool = True
     ) -> Tuple[bool, List[str]]:

@@ -11,7 +11,7 @@ IMPORTANT: The chart API is unofficial and may change without notice.
 """
 
 import fiddler as fdl
-from fiddler_utils import ChartManager
+from fiddler_utils import ChartManager, configure_fiddler_logging
 
 # ============================================================================
 # Configuration
@@ -41,6 +41,9 @@ def list_and_analyze_charts():
     print('=' * 70)
     print('EXAMPLE 1: List and Analyze Charts')
     print('=' * 70)
+
+    # Suppress verbose Fiddler client logs (recommended)
+    configure_fiddler_logging(level='ERROR')
 
     # Initialize chart manager
     # IMPORTANT: ChartManager requires explicit URL and token
@@ -333,6 +336,9 @@ def copy_charts_between_models():
 
 def main():
     """Run all examples."""
+
+    # Suppress verbose logs for cleaner output (recommended)
+    configure_fiddler_logging(level='ERROR')
 
     print('\n')
     print('╔' + '=' * 68 + '╗')

@@ -12,7 +12,7 @@ IMPORTANT: The dashboard API is unofficial and may change without notice.
 """
 
 import fiddler as fdl
-from fiddler_utils import DashboardManager, ChartManager
+from fiddler_utils import DashboardManager, ChartManager, configure_fiddler_logging
 
 # ============================================================================
 # Configuration
@@ -42,6 +42,9 @@ def list_and_analyze_dashboards():
     print('=' * 70)
     print('EXAMPLE 1: List and Analyze Dashboards')
     print('=' * 70)
+
+    # Suppress verbose Fiddler client logs (recommended)
+    configure_fiddler_logging(level='ERROR')
 
     # Initialize dashboard manager
     # IMPORTANT: DashboardManager requires explicit URL and token
@@ -385,6 +388,9 @@ def find_and_delete_old_dashboards():
 
 def main():
     """Run all examples."""
+
+    # Suppress verbose logs for cleaner output (recommended)
+    configure_fiddler_logging(level='ERROR')
 
     print('\n')
     print('╔' + '=' * 68 + '╗')
