@@ -12,11 +12,10 @@ Baselines are used for drift detection and comparison in Fiddler monitoring.
 
 import fiddler as fdl
 from fiddler_utils import (
-    BaselineManager,
-    get_or_init,
-    ConnectionManager,
-    SchemaValidator,
-    configure_fiddler_logging,
+    BaselineManager
+    get_or_init
+    ConnectionManager
+    SchemaValidator
 )
 
 # ============================================================================
@@ -52,7 +51,6 @@ def list_and_analyze_baselines():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=SOURCE_URL, token=SOURCE_TOKEN, log_level='ERROR')
@@ -129,7 +127,6 @@ def export_baselines():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=SOURCE_URL, token=SOURCE_TOKEN, log_level='ERROR')
@@ -143,7 +140,7 @@ def export_baselines():
     # Export baselines
     baseline_mgr = BaselineManager()
     exported_baselines = baseline_mgr.export_assets(
-        model_id=model.id,
+        model_id=model.id
         names=BASELINES_TO_EXPORT or None  # None = export all
     )
 
@@ -174,7 +171,6 @@ def import_baselines_to_target(exported_baselines):
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to target
     get_or_init(url=TARGET_URL, token=TARGET_TOKEN, log_level='ERROR')
@@ -192,10 +188,10 @@ def import_baselines_to_target(exported_baselines):
     baseline_mgr = BaselineManager()
 
     dry_result = baseline_mgr.import_assets(
-        target_model_id=target_model.id,
-        assets=exported_baselines,
-        validate=True,
-        dry_run=True,
+        target_model_id=target_model.id
+        assets=exported_baselines
+        validate=True
+        dry_run=True
         skip_invalid=False
     )
 
@@ -222,10 +218,10 @@ def import_baselines_to_target(exported_baselines):
     # Actual import
     print('\n[ACTUAL IMPORT] Importing baselines...')
     result = baseline_mgr.import_assets(
-        target_model_id=target_model.id,
-        assets=exported_baselines,
-        validate=True,
-        dry_run=False,
+        target_model_id=target_model.id
+        assets=exported_baselines
+        validate=True
+        dry_run=False
         skip_invalid=True  # Skip invalid, import valid ones
     )
 
@@ -255,7 +251,6 @@ def copy_baselines_same_instance():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=SOURCE_URL, token=SOURCE_TOKEN, log_level='ERROR')
@@ -272,8 +267,8 @@ def copy_baselines_same_instance():
     # Use copy_assets method (convenience for same-instance operations)
     baseline_mgr = BaselineManager()
     result = baseline_mgr.copy_assets(
-        source_model_id=source_model.id,
-        target_model_id=target_model.id,
+        source_model_id=source_model.id
+        target_model_id=target_model.id
         names=None,  # Copy all baselines
         validate=True
     )
@@ -302,7 +297,6 @@ def cross_instance_migration():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Setup connection manager
     conn_mgr = ConnectionManager(log_level='ERROR')
@@ -330,17 +324,17 @@ def cross_instance_migration():
         print(f'  Target: {target_model.name}')
 
         # Check if schemas are compatible
-        # (Baseline import doesn't require schema validation like segments/metrics,
+        # (Baseline import doesn't require schema validation like segments/metrics
         #  but it's good practice to verify the models are similar)
 
     # Step 3: Import to target
     print('\n[Step 3] Importing to target instance...')
     with conn_mgr.use('target'):
         result = baseline_mgr.import_assets(
-            target_model_id=target_model.id,
-            assets=exported,
-            validate=True,
-            dry_run=False,
+            target_model_id=target_model.id
+            assets=exported
+            validate=True
+            dry_run=False
             skip_invalid=True
         )
 
@@ -365,7 +359,6 @@ def create_baselines_example():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=SOURCE_URL, token=SOURCE_TOKEN, log_level='ERROR')
@@ -380,11 +373,11 @@ def create_baselines_example():
     print('\n  Creating 7-day rolling baseline...')
     try:
         rolling_baseline = fdl.Baseline(
-            model_id=model.id,
-            name='7_day_rolling',
-            type_=fdl.BaselineType.ROLLING,
-            environment=fdl.EnvType.PRODUCTION,
-            window_bin_size=fdl.WindowBinSize.DAY,
+            model_id=model.id
+            name='7_day_rolling'
+            type_=fdl.BaselineType.ROLLING
+            environment=fdl.EnvType.PRODUCTION
+            window_bin_size=fdl.WindowBinSize.DAY
             offset_delta=7
         )
         rolling_baseline.create()
@@ -396,11 +389,11 @@ def create_baselines_example():
     print('\n  Creating 30-day rolling baseline...')
     try:
         rolling_baseline_30 = fdl.Baseline(
-            model_id=model.id,
-            name='30_day_rolling',
-            type_=fdl.BaselineType.ROLLING,
-            environment=fdl.EnvType.PRODUCTION,
-            window_bin_size=fdl.WindowBinSize.DAY,
+            model_id=model.id
+            name='30_day_rolling'
+            type_=fdl.BaselineType.ROLLING
+            environment=fdl.EnvType.PRODUCTION
+            window_bin_size=fdl.WindowBinSize.DAY
             offset_delta=30
         )
         rolling_baseline_30.create()
@@ -427,7 +420,6 @@ def compare_baselines_across_models():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=SOURCE_URL, token=SOURCE_TOKEN, log_level='ERROR')
@@ -447,8 +439,8 @@ def compare_baselines_across_models():
             baselines = baseline_mgr.list_assets(model_id=model.id)
 
             baseline_summary[model_name] = {
-                'count': len(baselines),
-                'types': {},
+                'count': len(baselines)
+                'types': {}
                 'names': [bl.name for bl in baselines]
             }
 
@@ -507,7 +499,6 @@ def main():
     """Run baseline management examples."""
 
     # Suppress verbose logs for all examples
-    configure_fiddler_logging(level='ERROR')
 
     print('\n')
     print('╔' + '=' * 68 + '╗')

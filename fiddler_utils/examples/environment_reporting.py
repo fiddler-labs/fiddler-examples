@@ -12,10 +12,9 @@ This replaces the env_stats.ipynb notebook with a reusable, scriptable API.
 
 import fiddler as fdl
 from fiddler_utils import (
-    EnvironmentReporter,
-    ProjectManager,
-    get_or_init,
-    configure_fiddler_logging,
+    EnvironmentReporter
+    ProjectManager
+    get_or_init
 )
 
 # ============================================================================
@@ -44,7 +43,6 @@ def quick_environment_summary():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=FIDDLER_URL, token=FIDDLER_TOKEN, log_level='ERROR')
@@ -53,24 +51,24 @@ def quick_environment_summary():
     print('\nAnalyzing environment (this may take a few moments)...')
     reporter = EnvironmentReporter()
     reporter.analyze_environment(
-        include_features=True,
-        include_timestamps=True,
+        include_features=True
+        include_timestamps=True
         include_assets=False  # Set to True for asset counts (slower)
     )
 
     # Generate formatted report
     reporter.generate_report(
-        show_projects=True,
-        show_models=True,
-        show_timestamps=True,
-        show_newest_oldest=True,
+        show_projects=True
+        show_models=True
+        show_timestamps=True
+        show_newest_oldest=True
         top_n=15
     )
 
     # Export to CSV
     print('\nExporting to CSV...')
     files = reporter.export_to_csv(
-        output_dir=EXPORT_DIR,
+        output_dir=EXPORT_DIR
         prefix=EXPORT_PREFIX
     )
     print(f'✓ Exported {len(files)} files:')
@@ -91,7 +89,6 @@ def detailed_environment_analysis():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=FIDDLER_URL, token=FIDDLER_TOKEN, log_level='ERROR')
@@ -109,7 +106,7 @@ def detailed_environment_analysis():
     # Step 2: Get environment hierarchy
     print('\n[Step 2] Building environment hierarchy...')
     hierarchy = mgr.get_environment_hierarchy(
-        include_features=True,
+        include_features=True
         include_timestamps=True
     )
 
@@ -167,7 +164,7 @@ def detailed_environment_analysis():
     # Step 5: Export to CSV
     print('\n[Step 5] Exporting to CSV...')
     files = mgr.export_environment_to_csv(
-        output_dir=EXPORT_DIR,
+        output_dir=EXPORT_DIR
         prefix=f'{EXPORT_PREFIX}_detailed'
     )
     print(f'✓ Exported {len(files)} files:')
@@ -190,7 +187,6 @@ def project_level_analysis():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=FIDDLER_URL, token=FIDDLER_TOKEN, log_level='ERROR')
@@ -225,7 +221,6 @@ def model_inventory():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=FIDDLER_URL, token=FIDDLER_TOKEN, log_level='ERROR')
@@ -273,7 +268,6 @@ def export_for_custom_analysis():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=FIDDLER_URL, token=FIDDLER_TOKEN, log_level='ERROR')
@@ -283,7 +277,7 @@ def export_for_custom_analysis():
     # Get hierarchy
     print('\nCollecting environment data...')
     hierarchy = mgr.get_environment_hierarchy(
-        include_features=True,
+        include_features=True
         include_timestamps=True
     )
 
@@ -350,7 +344,6 @@ def console_friendly_display():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=FIDDLER_URL, token=FIDDLER_TOKEN, log_level='ERROR')
@@ -378,7 +371,6 @@ def minimal_analysis():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=FIDDLER_URL, token=FIDDLER_TOKEN, log_level='ERROR')
@@ -394,10 +386,10 @@ def minimal_analysis():
 
     # Generate report (will skip feature and timestamp sections)
     reporter.generate_report(
-        show_projects=True,
+        show_projects=True
         show_models=False,  # Skip model details
-        show_timestamps=False,
-        show_newest_oldest=False,
+        show_timestamps=False
+        show_newest_oldest=False
         top_n=10
     )
 
@@ -411,7 +403,6 @@ def main():
     """Run environment reporting examples."""
 
     # Suppress verbose logs for all examples
-    configure_fiddler_logging(level='ERROR')
 
     print('\n')
     print('╔' + '=' * 68 + '╗')
