@@ -1,10 +1,11 @@
-"""Fiddler Utilities - Internal helper library for field engineers.
+"""Fiddler Utils - Admin Automation Library
 
-This package provides convenience wrappers and utilities for common
+This package provides high-level abstractions and utilities for common
 Fiddler administrative tasks, reducing code duplication across utility
 scripts and notebooks.
 
-NOT part of the official Fiddler SDK - for internal use only.
+Designed for both Fiddler field engineers and customers. NOT part of
+the official Fiddler SDK, but customers are welcome to use and extend it.
 
 Version compatibility: Requires fiddler-client >= 3.10.0
 

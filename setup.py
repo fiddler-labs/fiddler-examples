@@ -1,9 +1,10 @@
 """Setup script for fiddler_utils package.
 
-This package provides internal utilities for Fiddler field engineers
-to reduce code duplication across utility scripts and notebooks.
+Admin automation library that provides high-level abstractions over the
+Fiddler Python client for common administrative tasks.
 
-NOT part of the official Fiddler SDK - for internal use only.
+Designed for field engineers and customers to reduce code duplication
+across utility scripts and notebooks.
 """
 
 from setuptools import setup, find_packages
@@ -18,7 +19,7 @@ if readme_file.exists():
 setup(
     name="fiddler-utils",
     version="0.1.0",
-    description="Internal utilities for Fiddler field engineers",
+    description="Admin automation library for Fiddler administrative tasks",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Fiddler AI",

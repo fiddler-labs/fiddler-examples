@@ -37,9 +37,9 @@ This repo contains the example notebooks listed below. You can launch them in a 
 * [Ranking Model - Monitoring](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb)
 * [Regression Model - Monitoring](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb)
 
-## Fiddler Utils Package
+## Fiddler Utils Package - Admin Automation Library
 
-The [`fiddler_utils`](./fiddler_utils) package is an internal helper library for Fiddler field engineers, designed to reduce code duplication across utility scripts and notebooks. **This package is NOT part of the official Fiddler SDK** and is intended for internal use only.
+The [`fiddler_utils`](./fiddler_utils) package is an admin automation library designed to reduce code duplication across utility scripts and notebooks. While **not part of the official Fiddler SDK**, it is available for both Fiddler field engineers and customers to use and extend.
 
 ### Key Capabilities
 

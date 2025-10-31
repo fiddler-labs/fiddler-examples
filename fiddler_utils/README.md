@@ -1,8 +1,8 @@
-## Fiddler Utils
+## Fiddler Utils - Admin Automation Library
 
-Internal helper library for field engineers to reduce code duplication across utility scripts and notebooks.
+Admin automation library providing high-level abstractions for common Fiddler administrative tasks, designed to reduce code duplication across utility scripts and notebooks.
 
-**NOT part of the official Fiddler SDK** -
+While not part of the official Fiddler SDK, this library is available for both field engineers and customers to use, extend, and contribute to.
 
 ### Overview
 
@@ -21,7 +21,7 @@ Internal helper library for field engineers to reduce code duplication across ut
 From the `fiddler-examples` repository root:
 
 ```bash
-# Install in development mode (recommended for field engineers)
+# Install in development mode (recommended)
 pip install -e .
 
 # Or install from a requirements file
