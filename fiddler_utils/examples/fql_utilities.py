@@ -20,7 +20,7 @@ FQL Syntax Rules:
 """
 
 import fiddler as fdl
-from fiddler_utils import fql, get_or_init, SchemaValidator, configure_fiddler_logging
+from fiddler_utils import fql, get_or_init, SchemaValidator
 
 # ============================================================================
 # Configuration
@@ -116,9 +116,9 @@ def validate_syntax_example():
 
     # Check multiple expressions
     test_expressions = [
-        '"age" > 30',
-        '"status" == \'active\'',
-        'sum("revenue")',
+        '"age" > 30'
+        '"status" == \'active\''
+        'sum("revenue")'
         '("a" > 1',  # Invalid
         '"name == \'test\'',  # Invalid
     ]
@@ -148,8 +148,8 @@ def replace_column_names_example():
 
     # Define mapping (old name -> new name)
     mapping = {
-        'customer_age': 'age',
-        'customer_region': 'geography',
+        'customer_age': 'age'
+        'customer_region': 'geography'
     }
 
     # Apply mapping
@@ -172,8 +172,8 @@ def replace_column_names_example():
     print(f'\n💡 Use Case: Migrating assets between models with different column names')
     segment_def = '"user_age" > 25 and "user_country" == \'USA\''
     model_mapping = {
-        'user_age': 'customer_age',
-        'user_country': 'country_code',
+        'user_age': 'customer_age'
+        'user_country': 'country_code'
     }
     migrated_def = fql.replace_column_names(segment_def, model_mapping)
     print(f'Source model segment: {segment_def}')
@@ -291,11 +291,11 @@ def identify_filter_type_example():
 
     # Batch check
     expressions = [
-        ('"age" > 30', 'Simple age filter'),
-        ('sum("revenue")', 'Revenue sum'),
-        ('"status" == \'active\'', 'Status filter'),
-        ('avg(if(fp(), 1, 0))', 'False positive rate'),
-        ('"price" > 100 and "quantity" < 5', 'Combined filter'),
+        ('"age" > 30', 'Simple age filter')
+        ('sum("revenue")', 'Revenue sum')
+        ('"status" == \'active\'', 'Status filter')
+        ('avg(if(fp(), 1, 0))', 'False positive rate')
+        ('"price" > 100 and "quantity" < 5', 'Combined filter')
     ]
 
     print(f'\n\nBatch classification:')
@@ -356,7 +356,6 @@ def validate_against_schema_example():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=FIDDLER_URL, token=FIDDLER_TOKEN, log_level='ERROR')
@@ -447,8 +446,8 @@ def complete_workflow_example():
     # Step 4: Map columns to target model
     print(f'\n[Step 4] Map columns to target model...')
     column_mapping = {
-        'customer_age': 'age',
-        'customer_region': 'geography',
+        'customer_age': 'age'
+        'customer_region': 'geography'
     }
     print(f'  Mapping: {column_mapping}')
 
