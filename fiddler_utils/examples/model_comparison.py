@@ -17,10 +17,9 @@ Results can be exported to multiple formats for documentation and analysis.
 
 import fiddler as fdl
 from fiddler_utils import (
-    ModelComparator,
-    ComparisonConfig,
-    ConnectionManager,
-    configure_fiddler_logging,
+    ModelComparator
+    ComparisonConfig
+    ConnectionManager
 )
 
 # ============================================================================
@@ -57,7 +56,6 @@ def compare_models_same_instance():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler instance
     fdl.init(url=SOURCE_URL, token=SOURCE_TOKEN)
@@ -107,7 +105,6 @@ def compare_models_cross_instance():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Set up connection manager for multiple instances
     conn_mgr = ConnectionManager(log_level='ERROR')
@@ -160,7 +157,6 @@ def compare_schemas_only():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     fdl.init(url=SOURCE_URL, token=SOURCE_TOKEN)
 
@@ -213,7 +209,6 @@ def compare_without_assets():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     fdl.init(url=SOURCE_URL, token=SOURCE_TOKEN)
 
@@ -296,9 +291,9 @@ def export_comparison_results(result):
         print(df.head().to_string(index=False))
 
     return {
-        'json': json_file,
-        'markdown': markdown_file,
-        'csv': csv_file,
+        'json': json_file
+        'markdown': markdown_file
+        'csv': csv_file
     }
 
 
@@ -315,7 +310,6 @@ def custom_comparison_config():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     fdl.init(url=SOURCE_URL, token=SOURCE_TOKEN)
 
@@ -326,14 +320,14 @@ def custom_comparison_config():
     # Create custom config: compare schema, spec, segments, and custom metrics only
     # Skip: configuration, alerts, baselines, charts
     config = ComparisonConfig(
-        include_configuration=False,
-        include_schema=True,
-        include_spec=True,
-        include_segments=True,
-        include_custom_metrics=True,
-        include_alerts=False,
-        include_baselines=False,
-        include_charts=False,
+        include_configuration=False
+        include_schema=True
+        include_spec=True
+        include_segments=True
+        include_custom_metrics=True
+        include_alerts=False
+        include_baselines=False
+        include_charts=False
     )
 
     print(f'\nCustom comparison (schema + spec + segments + metrics):')
@@ -445,7 +439,7 @@ def interpret_comparison_results(result):
     if result.configuration and result.configuration.has_differences():
         print('   ⚠️ Review configuration differences before deployment')
 
-    if any([result.segments and result.segments.has_differences(),
+    if any([result.segments and result.segments.has_differences()
             result.custom_metrics and result.custom_metrics.has_differences()]):
         print('   ℹ️ Consider syncing assets between models')
 
@@ -459,7 +453,6 @@ def main():
     """Run all comparison examples."""
 
     # Suppress verbose logs for all examples
-    configure_fiddler_logging(level='ERROR')
 
     print('\n')
     print('╔' + '=' * 68 + '╗')

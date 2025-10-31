@@ -21,10 +21,9 @@ Use cases:
 
 import fiddler as fdl
 from fiddler_utils import (
-    ModelManager,
-    get_or_init,
-    ConnectionManager,
-    configure_fiddler_logging,
+    ModelManager
+    get_or_init
+    ConnectionManager
 )
 import json
 import os
@@ -63,7 +62,6 @@ def export_model_definition():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to source
     get_or_init(url=SOURCE_URL, token=SOURCE_TOKEN, log_level='ERROR')
@@ -80,7 +78,7 @@ def export_model_definition():
     print('\nExporting model definition...')
     model_mgr = ModelManager()
     export_data = model_mgr.export_model(
-        model_id=model.id,
+        model_id=model.id
         include_baselines=True  # Include baseline definitions
     )
 
@@ -192,7 +190,6 @@ def import_model_to_target(export_data):
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to target
     get_or_init(url=TARGET_URL, token=TARGET_TOKEN, log_level='ERROR')
@@ -212,8 +209,8 @@ def import_model_to_target(export_data):
 
     try:
         imported_model = model_mgr.import_model(
-            project_id=target_project.id,
-            export_data=export_data,
+            project_id=target_project.id
+            export_data=export_data
             model_name=TARGET_MODEL,  # Override name
             include_baselines=True
         )
@@ -248,7 +245,6 @@ def cross_instance_migration():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Setup connection manager
     conn_mgr = ConnectionManager(log_level='ERROR')
@@ -274,9 +270,9 @@ def cross_instance_migration():
 
         print(f'  Target project: {target_proj.name}')
         imported_model = model_mgr.import_model(
-            project_id=target_proj.id,
-            export_data=export_data,
-            model_name=TARGET_MODEL,
+            project_id=target_proj.id
+            export_data=export_data
+            model_name=TARGET_MODEL
             include_baselines=True
         )
         print(f'  ✓ Imported as: {imported_model.name}')
@@ -299,7 +295,6 @@ def clone_model_as_template():
     print('=' * 70)
 
     # Suppress verbose logs
-    configure_fiddler_logging(level='ERROR')
 
     # Connect to Fiddler
     get_or_init(url=SOURCE_URL, token=SOURCE_TOKEN, log_level='ERROR')
@@ -320,9 +315,9 @@ def clone_model_as_template():
     for clone_name in clones:
         try:
             clone = model_mgr.import_model(
-                project_id=project.id,
-                export_data=export_data,
-                model_name=clone_name,
+                project_id=project.id
+                export_data=export_data
+                model_name=clone_name
                 include_baselines=False
             )
             print(f'  ✓ Created: {clone.name}')
@@ -406,7 +401,6 @@ def main():
     """Run model export/import examples."""
 
     # Suppress verbose logs for all examples
-    configure_fiddler_logging(level='ERROR')
 
     print('\n')
     print('╔' + '=' * 68 + '╗')
