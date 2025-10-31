@@ -1,8 +1,8 @@
 ## Fiddler Utils
 
-Internal helper library for Fiddler field engineers to reduce code duplication across utility scripts and notebooks.
+Internal helper library for field engineers to reduce code duplication across utility scripts and notebooks.
 
-**NOT part of the official Fiddler SDK** - for internal use only.
+**NOT part of the official Fiddler SDK** -
 
 ### Overview
 
@@ -31,8 +31,8 @@ pip install -e .
 
 ### Requirements
 
-* Python >= 3.8
-* fiddler-client >= 3.10.0
+* Python >= 3.10
+* fiddler-client >= 3.10
 
 ### Quick Start
 
@@ -238,18 +238,19 @@ All exceptions inherit from `FiddlerUtilsError`:
 
 ### Logging
 
-Configure logging for both fiddler_utils and the Fiddler client:
+Configure logging for fiddler_utils:
 
 ```python
-from fiddler_utils import configure_fiddler_logging
+from fiddler_utils import configure_logging
 
-# Suppress verbose Fiddler client logs (recommended for scripts)
-configure_fiddler_logging(level='ERROR')
+# Enable debug logging for fiddler_utils
+configure_logging(level='DEBUG')
 
-# Or use with connection initialization
-from fiddler_utils import get_or_init
-
-get_or_init(url=URL, token=TOKEN, log_level='ERROR')
+# Custom format
+configure_logging(
+    level='INFO',
+    format='%(levelname)s - %(message)s'
+)
 ```
 
 ### Asset Management

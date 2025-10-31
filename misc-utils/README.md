@@ -42,22 +42,6 @@ A utility for analyzing and extracting hierarchical information about a Fiddler 
 - `env_stats__overview.csv` - Main export table with project, model, version_name, created_at, updated_at
 - `env_stats__flattened_hierarchy.csv` - Detailed feature-level data enriched with timestamps
 
-### user_invite_automation.ipynb
-
-A utility notebook for bulk user invitation management in Fiddler. It allows:
-
-- Loading email addresses from a CSV file
-- Sending invitations to multiple users at once with specified roles (Org Admin/Org Member)
-- Deleting invitations in bulk
-- Extracting and saving invitation URLs from the Fiddler UI
-
-**Prerequisites:** CSV file with email addresses in a column named 'mails'
-
-**Notes:**
-
-- Contains example of API response format with invitation links, useful for reference
-- Separate code blocks for invitation creation and deletion for safety
-
 ### alert_bulk_modification.ipynb
 
 A comprehensive utility for modifying alert thresholds across all models and projects. Specifically:
@@ -284,6 +268,214 @@ A utility for fetching performance metrics for binary classification models from
 - Can be easily modified to support additional metric types
 - Useful for automated reporting and metric extraction workflows
 - CSV output can be integrated into broader analytics pipelines
+
+### get_column_name_id_mapping.py
+
+A quick utility script for retrieving column name to column ID mappings from the Fiddler API:
+
+- Fetches model schema directly via Fiddler API endpoint
+- Returns dictionary mapping column names to their internal UUIDs
+- Useful for debugging and understanding internal model structure
+- Simple standalone script with minimal dependencies
+
+**Prerequisites:**
+
+- Fiddler instance URL
+- Valid API token
+- Model ID (UUID) of the target model
+
+**Key features:**
+
+- Direct API call to `/v3/models/{model_id}` endpoint
+- Parses schema from API response
+- Returns clean dictionary of column name → column ID mappings
+- Includes example usage in main block
+
+**Usage notes:**
+
+- Helpful for troubleshooting issues related to column references
+- Can be used to understand how Fiddler internally tracks columns
+- Useful when working with unofficial API endpoints that require column IDs
+- Minimal error handling for quick debugging use
+
+### 20newsgroups_prep_vectorization.ipynb
+
+A data preparation notebook for NLP examples using the 20Newsgroups dataset:
+
+- Fetches the public 20Newsgroups dataset from scikit-learn
+- Groups original 20 topics into 6 general categories (computer, politics, recreation, science, religion, forsale)
+- Applies text preprocessing and filtering
+- Generates embeddings using both TF-IDF and OpenAI text-embedding-ada-002
+- Exports preprocessed data and embeddings to CSV files
+
+**Prerequisites:**
+
+- scikit-learn for dataset access
+- OpenAI API key (set as environment variable `OPENAI_API_KEY`)
+- pandas, numpy for data manipulation
+
+**Key features:**
+
+- Filters dataset to remove headers, footers, and quotes
+- Applies token and string length limits for OpenAI compatibility
+- Batch processing for OpenAI embeddings (up to 2000 samples per batch)
+- TF-IDF vectorization with customizable parameters
+- Outputs three CSV files: preprocessed text, OpenAI embeddings, TF-IDF embeddings
+
+**Usage notes:**
+
+- Generates reusable assets for NLP model monitoring examples
+- Can be adapted for other text classification datasets
+- OpenAI embeddings may incur API costs
+- Useful for creating baseline datasets for text monitoring use cases
+
+### generate_custom_metrics_segments.ipynb
+
+A utility for bulk generation of custom metrics and segments from pipe-delimited template files:
+
+- Creates multiple custom metrics and segments from a single template definition
+- Supports placeholder substitution for generating related objects (e.g., per-task-type metrics)
+- Includes dry-run mode for previewing generated objects before creation
+- Validates FQL syntax and column references against model schema
+- Detects and skips duplicate objects
+
+**Prerequisites:**
+
+- Fiddler URL and valid API token
+- Target project and model must exist
+- Pipe-delimited template file (`.psv` format)
+
+**Input file format:**
+
+Pipe-delimited file with columns: `name_template`, `type` (metric/segment), `formula_template`, `description_template`, `expand_values`
+
+**Key features:**
+
+- Template expansion with `{placeholder}` syntax
+- Column validation ensures all referenced columns exist in model schema
+- Duplicate detection prevents creating objects that already exist
+- Detailed error reporting for validation failures
+- Batch creation with progress tracking
+
+**Usage notes:**
+
+- Ideal for creating task-specific or cohort-specific metrics at scale
+- Example template file: `custom_metrics_templates.psv`
+- Supports single placeholder expansion (creates N objects from 1 template)
+- Useful for standardizing metrics across multiple models or projects
+
+### compare_models.ipynb
+
+A comprehensive model comparison utility using the `fiddler_utils` package:
+
+- Compares two Fiddler models across multiple dimensions (configuration, schema, spec, assets)
+- Supports cross-instance comparisons (different Fiddler deployments)
+- Uses `ModelComparator` from `fiddler_utils` with flexible configuration presets
+- Generates formatted markdown reports with detailed statistics
+
+**Prerequisites:**
+
+- `fiddler_utils` package installed (`pip install -e .` from repo root)
+- Source and target Fiddler instance URLs and API tokens
+- Both models must exist
+
+**Key features:**
+
+- Compares configuration (task type, event columns, task parameters)
+- Compares schema (columns, roles, data types, ranges, categories)
+- Compares spec (inputs, outputs, targets, metadata, custom features)
+- Compares assets (segments, custom metrics, alerts, baselines, charts)
+- Flexible comparison presets: `all()`, `schema_only()`, `no_assets()`
+- Exports results to markdown, JSON, CSV, or DataFrame
+
+**Usage notes:**
+
+- Use cases: version comparison, cross-environment validation, migration planning
+- Programmatic access to comparison results for automation
+- Detailed summary statistics with visual indicators
+- Safe for comparing models across different Fiddler instances
+
+### export_import_models.ipynb
+
+A complete model export and import utility using the `fiddler_utils` package:
+
+- Exports complete model definitions including schema, spec, task configuration, baselines, and related assets
+- Imports models to different projects or instances without requiring a DataFrame
+- Supports multiple import modes: `create_new`, `create_version`, `update_existing`
+- Uses `ModelManager` from `fiddler_utils` for deterministic and reproducible imports
+
+**Prerequisites:**
+
+- `fiddler_utils` package installed (`pip install -e .` from repo root)
+- Source and target Fiddler instance URLs and API tokens
+- Source model must exist (target model will be created)
+
+**Supported features:**
+
+- Model schema with complete column definitions (types, ranges, categories)
+- Model spec (inputs, outputs, targets, metadata, decisions, custom features)
+- Task configuration and parameters
+- Rolling baselines (auto-created)
+- Segments and custom metrics (with FQL validation)
+- Model versioning support
+
+**Partial support:**
+
+- Static baselines (exported but require manual dataset publishing)
+- Alerts (exported for reference but require manual creation due to metric ID mapping)
+
+**Key features:**
+
+- No DataFrame required for import (uses Model constructor pattern)
+- JSON serialization for archival and version control
+- Cross-instance transfer support with `ConnectionManager`
+- Safe defaults (fails if model already exists in `create_new` mode)
+- Display and comparison utilities included
+
+**Usage notes:**
+
+- Ideal for environment promotion (dev → staging → prod)
+- Model artifact files must be manually re-uploaded after import
+- Deterministic imports ensure consistency across environments
+- Can create new versions of existing models with `create_version` mode
+
+### export_import_model_assets.ipynb
+
+An asset-level export and import utility using the `fiddler_utils` package:
+
+- Exports and imports segments, custom metrics, and charts between models
+- Supports cross-instance transfers with automatic schema validation
+- Uses `SegmentManager`, `CustomMetricManager`, and `ChartManager` from `fiddler_utils`
+- Includes dry-run mode and comprehensive error handling
+
+**Prerequisites:**
+
+- `fiddler_utils` package installed (`pip install -e .` from repo root)
+- Source and target Fiddler instance URLs and API tokens
+- Source and target models must exist
+
+**Key features:**
+
+- Schema comparison before import to identify compatibility issues
+- FQL column reference validation (detects missing columns)
+- Automatic duplicate detection with skip option
+- Dry-run mode for validation without creating assets
+- Detailed import results with success/skip/failure counts
+- Chart export from dashboards with dependency analysis
+
+**Asset types supported:**
+
+- Segments (with FQL definition validation)
+- Custom metrics (with FQL definition validation)
+- Charts (using unofficial API, may change)
+
+**Usage notes:**
+
+- Validates that all columns referenced in FQL exist in target model
+- Skips assets with invalid column references (with detailed error messages)
+- Useful for migrating monitoring configurations between models
+- Chart import includes baseline, custom metric, and segment dependency mapping
+- Can filter assets by name during export (export subset of assets)
 
 ---
 
