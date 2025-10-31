@@ -11,7 +11,7 @@ IMPORTANT: The chart API is unofficial and may change without notice.
 """
 
 import fiddler as fdl
-from fiddler_utils import ChartManager, configure_fiddler_logging
+from fiddler_utils import ChartManager
 
 # ============================================================================
 # Configuration
@@ -43,7 +43,6 @@ def list_and_analyze_charts():
     print('=' * 70)
 
     # Suppress verbose Fiddler client logs (recommended)
-    configure_fiddler_logging(level='ERROR')
 
     # Initialize chart manager
     # IMPORTANT: ChartManager requires explicit URL and token
@@ -139,10 +138,10 @@ def import_charts_to_target(exported_charts):
     # Dry run first to check what would happen
     print('\nRunning dry run...')
     dry_result = chart_mgr.import_charts(
-        target_project_id=target_project.id,
-        target_model_id=target_model.id,
-        charts=exported_charts,
-        dry_run=True,
+        target_project_id=target_project.id
+        target_model_id=target_model.id
+        charts=exported_charts
+        dry_run=True
     )
 
     print(f'  Would import: {dry_result["successful"]} charts')
@@ -159,10 +158,10 @@ def import_charts_to_target(exported_charts):
     if proceed == 'y':
         print('\nImporting charts...')
         result = chart_mgr.import_charts(
-            target_project_id=target_project.id,
-            target_model_id=target_model.id,
-            charts=exported_charts,
-            dry_run=False,
+            target_project_id=target_project.id
+            target_model_id=target_model.id
+            charts=exported_charts
+            dry_run=False
         )
 
         print(f'\nImport complete:')
@@ -316,10 +315,10 @@ def copy_charts_between_models():
 
     # Import to target model
     result = chart_mgr.import_charts(
-        target_project_id=project.id,
-        target_model_id=target_model.id,
-        charts=exported,
-        dry_run=False,
+        target_project_id=project.id
+        target_model_id=target_model.id
+        charts=exported
+        dry_run=False
     )
 
     print(f'\nCopy complete:')
@@ -338,7 +337,6 @@ def main():
     """Run all examples."""
 
     # Suppress verbose logs for cleaner output (recommended)
-    configure_fiddler_logging(level='ERROR')
 
     print('\n')
     print('╔' + '=' * 68 + '╗')

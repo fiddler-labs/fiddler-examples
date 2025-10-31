@@ -12,7 +12,7 @@ IMPORTANT: The dashboard API is unofficial and may change without notice.
 """
 
 import fiddler as fdl
-from fiddler_utils import DashboardManager, ChartManager, configure_fiddler_logging
+from fiddler_utils import DashboardManager, ChartManager
 
 # ============================================================================
 # Configuration
@@ -44,7 +44,6 @@ def list_and_analyze_dashboards():
     print('=' * 70)
 
     # Suppress verbose Fiddler client logs (recommended)
-    configure_fiddler_logging(level='ERROR')
 
     # Initialize dashboard manager
     # IMPORTANT: DashboardManager requires explicit URL and token
@@ -123,11 +122,11 @@ def create_dashboard_from_charts():
 
     try:
         dashboard = dashboard_mgr.create_dashboard(
-            project_id=project.id,
-            model_id=model.id,
-            title='Example Dashboard (Auto Layout)',
-            chart_ids=chart_ids,
-            set_as_default=False,
+            project_id=project.id
+            model_id=model.id
+            title='Example Dashboard (Auto Layout)'
+            chart_ids=chart_ids
+            set_as_default=False
         )
 
         print(f'\n✓ Created dashboard: {dashboard.get("title")}')
@@ -173,22 +172,22 @@ def create_dashboard_with_custom_layout():
     # Chart 3: Bottom right (1 column, 1 row)
     custom_layout = [
         {
-            'chart_uuid': charts[0]['id'],
+            'chart_uuid': charts[0]['id']
             'grid_props': {
-                'position_x': 0,
-                'position_y': 0,
+                'position_x': 0
+                'position_y': 0
                 'width': 2,  # Wide - takes 2 columns
-                'height': 1,
-            },
-        },
+                'height': 1
+            }
+        }
         {
-            'chart_uuid': charts[1]['id'],
-            'grid_props': {'position_x': 0, 'position_y': 1, 'width': 1, 'height': 1},
-        },
+            'chart_uuid': charts[1]['id']
+            'grid_props': {'position_x': 0, 'position_y': 1, 'width': 1, 'height': 1}
+        }
         {
-            'chart_uuid': charts[2]['id'],
-            'grid_props': {'position_x': 1, 'position_y': 1, 'width': 1, 'height': 1},
-        },
+            'chart_uuid': charts[2]['id']
+            'grid_props': {'position_x': 1, 'position_y': 1, 'width': 1, 'height': 1}
+        }
     ]
 
     chart_ids = [charts[0]['id'], charts[1]['id'], charts[2]['id']]
@@ -199,12 +198,12 @@ def create_dashboard_with_custom_layout():
 
     try:
         dashboard = dashboard_mgr.create_dashboard(
-            project_id=project.id,
-            model_id=model.id,
-            title='Example Dashboard (Custom Layout)',
-            chart_ids=chart_ids,
-            layout=custom_layout,
-            set_as_default=False,
+            project_id=project.id
+            model_id=model.id
+            title='Example Dashboard (Custom Layout)'
+            chart_ids=chart_ids
+            layout=custom_layout
+            set_as_default=False
         )
 
         print(f'\n✓ Created dashboard with custom layout')
@@ -269,8 +268,8 @@ def export_and_import_dashboard():
     # To actually import:
     # try:
     #     imported = target_mgr.import_dashboard(
-    #         target_project_id=target_project.id,
-    #         target_model_id=target_model.id,
+    #         target_project_id=target_project.id
+    #         target_model_id=target_model.id
     #         dashboard_data=exported
     #     )
     #     print(f"\n✓ Imported dashboard: {imported.get('title')}")
@@ -390,7 +389,6 @@ def main():
     """Run all examples."""
 
     # Suppress verbose logs for cleaner output (recommended)
-    configure_fiddler_logging(level='ERROR')
 
     print('\n')
     print('╔' + '=' * 68 + '╗')
