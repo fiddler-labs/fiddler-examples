@@ -8,11 +8,13 @@ Internal helper library for Fiddler field engineers to reduce code duplication a
 
 `fiddler_utils` provides convenience wrappers and utilities for common Fiddler administrative tasks including:
 
-* Connection management across multiple Fiddler instances
-* FQL (Fiddler Query Language) parsing and validation
-* Schema extraction, validation, and comparison
-* Asset management (segments, custom metrics, alerts, charts) - *Coming in Phase 2*
-* Bulk operations across projects/models - *Coming in Phase 3*
+* **Connection management** across multiple Fiddler instances
+* **FQL (Fiddler Query Language)** parsing, validation, and manipulation
+* **Schema** extraction, validation, and comparison
+* **Asset management** (segments, custom metrics, alerts, baselines, charts, dashboards)
+* **Model operations** (export/import, comparison, feature impact)
+* **Environment analysis** (project/model inventory, statistics, reporting)
+* Iteration utilities for safe, fault-tolerant operations
 
 ### Installation
 
@@ -236,19 +238,89 @@ All exceptions inherit from `FiddlerUtilsError`:
 
 ### Logging
 
-Configure logging for debugging:
+Configure logging for both fiddler_utils and the Fiddler client:
 
 ```python
-from fiddler_utils import configure_logging
+from fiddler_utils import configure_fiddler_logging
 
-# Enable debug logging
-configure_logging(level='DEBUG')
+# Suppress verbose Fiddler client logs (recommended for scripts)
+configure_fiddler_logging(level='ERROR')
 
-# Custom format
-configure_logging(
-    level='INFO',
-    format='%(levelname)s - %(message)s'
+# Or use with connection initialization
+from fiddler_utils import get_or_init
+
+get_or_init(url=URL, token=TOKEN, log_level='ERROR')
+```
+
+### Asset Management
+
+Working with segments, custom metrics, alerts, baselines, and dashboards:
+
+```python
+from fiddler_utils import (
+    SegmentManager,
+    CustomMetricManager,
+    AlertManager,
+    BaselineManager,
+    ChartManager,
+    DashboardManager,
 )
+
+# Export segments from source model
+segment_mgr = SegmentManager()
+exported_segments = segment_mgr.export_assets(model_id=source_model.id)
+
+# Import to target model (with validation)
+result = segment_mgr.import_assets(
+    target_model_id=target_model.id,
+    assets=exported_segments,
+    validate=True,
+    dry_run=False
+)
+
+print(f'Imported: {result.successful}, Failed: {result.failed}')
+```
+
+### Model Comparison
+
+Compare models across multiple dimensions:
+
+```python
+from fiddler_utils import ModelComparator, ComparisonConfig
+
+# Full comparison
+comparator = ModelComparator(model_a, model_b)
+result = comparator.compare_all()
+
+# Schema-only comparison (fast)
+config = ComparisonConfig.schema_only()
+result = comparator.compare_all(config=config)
+
+# Export results
+result.to_markdown()
+result.to_json('comparison.json')
+df = result.to_dataframe()
+```
+
+### Environment Analysis
+
+Analyze complete Fiddler environment:
+
+```python
+from fiddler_utils import EnvironmentReporter
+
+# Run complete analysis
+reporter = EnvironmentReporter()
+reporter.analyze_environment(
+    include_features=True,
+    include_timestamps=True
+)
+
+# Generate formatted report
+reporter.generate_report(top_n=15)
+
+# Export to CSV
+files = reporter.export_to_csv(prefix='env_stats')
 ```
 
 ### Development
@@ -277,55 +349,93 @@ fiddler_utils/
 ├── connection.py            # Connection management
 ├── fql.py                   # FQL parsing utilities
 ├── schema.py                # Schema validation
+├── comparison.py            # Model comparison
+├── projects.py              # Project/environment management
+├── reporting.py             # Environment reporting
+├── iteration.py             # Safe iteration utilities
 ├── exceptions.py            # Custom exceptions
-├── bulk.py                  # Bulk operations (Phase 3)
-├── assets/                  # Asset managers (Phase 2)
+├── assets/                  # Asset managers
 │   ├── __init__.py
 │   ├── base.py             # BaseAssetManager
 │   ├── segments.py         # SegmentManager
 │   ├── metrics.py          # CustomMetricManager
 │   ├── alerts.py           # AlertManager
-│   └── charts.py           # ChartManager
+│   ├── baselines.py        # BaselineManager
+│   ├── charts.py           # ChartManager
+│   ├── dashboards.py       # DashboardManager
+│   ├── models.py           # ModelManager
+│   └── feature_impact.py   # FeatureImpactManager
 ├── tests/                   # Unit tests
-│   ├── test_fql.py         # FQL tests (44 passing)
-│   ├── test_schema.py      # Schema tests (Phase 1)
-│   └── test_assets.py      # Asset manager tests (Phase 2)
+│   ├── test_fql.py         # FQL tests
+│   ├── test_schema.py      # Schema tests
+│   ├── test_comparison.py  # Comparison tests
+│   └── test_models.py      # Model tests
 └── examples/                # Usage examples
-    ├── basic_usage.py
-    ├── asset_export.py
-    └── schema_comparison.py
+    ├── asset_export_import.py
+    ├── chart_operations.py
+    ├── dashboard_operations.py
+    ├── model_comparison.py
+    ├── environment_reporting.py
+    ├── fql_utilities.py
+    ├── model_export_import.py
+    └── baseline_operations.py
 ```
 
-### Roadmap
+### Examples
+
+See the [`examples/`](examples/) directory for comprehensive usage examples:
+
+| Example | Description |
+|---------|-------------|
+| **[asset_export_import.py](examples/asset_export_import.py)** | Export/import segments and custom metrics between models |
+| **[chart_operations.py](examples/chart_operations.py)** | Manage charts (list, export, import, analyze) |
+| **[dashboard_operations.py](examples/dashboard_operations.py)** | Create and manage dashboards with auto/custom layouts |
+| **[model_comparison.py](examples/model_comparison.py)** | Compare models across configuration, schema, spec, and assets |
+| **[environment_reporting.py](examples/environment_reporting.py)** | Analyze complete environment hierarchy and generate reports |
+| **[fql_utilities.py](examples/fql_utilities.py)** | Parse, validate, and manipulate FQL expressions |
+| **[model_export_import.py](examples/model_export_import.py)** | Export/import complete model definitions (schema + spec) |
+| **[baseline_operations.py](examples/baseline_operations.py)** | Manage baselines (list, export, import, create) |
+
+Each example is self-contained and demonstrates best practices for using fiddler_utils.
+
+### Roadmap & Status
 
 **✅ Phase 1: Core Infrastructure (COMPLETED)**
 * ✅ Package structure and setup
-* ✅ Connection management
-* ✅ FQL parsing utilities
-* ✅ Schema validation
-* ✅ Comprehensive unit tests (44 FQL tests passing)
+* ✅ Connection management with multi-instance support
+* ✅ FQL parsing utilities (extract, validate, replace, normalize)
+* ✅ Schema validation and comparison
+* ✅ Comprehensive unit tests
 
-**Phase 2: Asset Management (IN PROGRESS)**
-* BaseAssetManager abstract class
-* SegmentManager
-* CustomMetricManager
-* AlertManager
-* ChartManager
+**✅ Phase 2: Asset Management (COMPLETED)**
+* ✅ BaseAssetManager abstract class
+* ✅ SegmentManager - segments export/import
+* ✅ CustomMetricManager - custom metrics export/import
+* ✅ AlertManager - alert analysis and management
+* ✅ BaselineManager - baseline export/import
+* ✅ ChartManager - chart operations (unofficial API)
+* ✅ DashboardManager - dashboard operations (unofficial API)
+* ✅ ModelManager - model export/import with full schema
+* ✅ FeatureImpactManager - feature impact management
 
-**Phase 3: Bulk Operations**
-* BulkOperations class
-* Project/model hierarchy traversal
-* Progress tracking with tqdm
+**✅ Phase 3: Model Operations & Analysis (COMPLETED)**
+* ✅ ModelComparator - comprehensive model comparison
+* ✅ ComparisonConfig - flexible comparison presets
+* ✅ Export comparison results (JSON, Markdown, CSV, DataFrame)
+* ✅ Cross-instance comparison support
 
-**Phase 4: Refactoring Utilities**
-* Refactor export_import_assets.ipynb
-* Refactor replace_alerts_with_mods.py
-* Refactor 4-6 additional utilities
+**✅ Phase 4: Environment Operations (COMPLETED)**
+* ✅ ProjectManager - environment hierarchy traversal
+* ✅ EnvironmentReporter - high-level reporting facade
+* ✅ Environment statistics and analysis
+* ✅ Timestamp analysis (creation dates, update dates)
+* ✅ CSV export at multiple granularity levels
 
-**Phase 5: Documentation & Polish**
-* Usage examples
-* Contributing guidelines
-* Type hints and mypy compliance
+**Phase 5: Additional Utilities (FUTURE)**
+* Iteration utilities enhancement
+* Additional reporting formats
+* Performance optimizations
+* Extended testing coverage
 
 ### Contributing
 
@@ -350,6 +460,27 @@ Internal use only - NOT for external distribution.
 
 ---
 
-**Version:** 0.1.0
-**Status:** Phase 1 Complete (Core Infrastructure)
-**Last Updated:** 2025-10-28
+**Version:** 0.2.0
+**Status:** Production Ready (Phases 1-4 Complete)
+**Last Updated:** 2025-10-30
+
+### Summary of Capabilities
+
+**Core Utilities:**
+* Connection management (single/multi-instance)
+* FQL parsing and validation
+* Schema validation and comparison
+* Logging configuration
+
+**Asset Managers:**
+* Segments, Custom Metrics, Alerts, Baselines
+* Charts, Dashboards (unofficial API)
+* Models (full export/import)
+* Feature Impact
+
+**Analysis Tools:**
+* Model comparison (ModelComparator)
+* Environment reporting (EnvironmentReporter)
+* Project management (ProjectManager)
+
+**8 Comprehensive Examples** covering all major features

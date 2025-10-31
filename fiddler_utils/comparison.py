@@ -144,7 +144,7 @@ class ComparisonConfig:
             include_charts=False
         )
 
-        comparator = ModelComparator(model_a, model_b)
+        comparator = ModelComparator(source_model, target_model)
         result = comparator.compare_all(config=config)
         ```
     """
@@ -206,8 +206,8 @@ class ComparisonConfig:
 @dataclass
 class ComparisonResult:
     """Complete comparison result for two models."""
-    model_a_name: str
-    model_b_name: str
+    source_model_name: str
+    target_model_name: str
     compared_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     configuration: Optional[ConfigurationComparison] = None
@@ -276,8 +276,8 @@ class ComparisonResult:
                 differences_by_category[asset_type] = asset_comp.total_differences
 
         summary = {
-            'model_a': self.model_a_name,
-            'model_b': self.model_b_name,
+            'source_model': self.source_model_name,
+            'target_model': self.target_model_name,
             'compared_at': self.compared_at,
             'has_differences': self.has_differences(),
             'differences_by_category': differences_by_category,
@@ -317,8 +317,8 @@ class ComparisonResult:
         lines = []
         lines.append("# Model Comparison Report")
         lines.append("")
-        lines.append(f"**Model A:** {self.model_a_name}")
-        lines.append(f"**Model B:** {self.model_b_name}")
+        lines.append(f"**Model A:** {self.source_model_name}")
+        lines.append(f"**Model B:** {self.target_model_name}")
         lines.append(f"**Compared at:** {self.compared_at}")
         lines.append("")
 
@@ -412,8 +412,8 @@ class ComparisonResult:
                     'category': 'configuration',
                     'item': key,
                     'difference_type': 'value_mismatch',
-                    'model_a_value': str(diff.source_value),
-                    'model_b_value': str(diff.target_value),
+                    'source_model_value': str(diff.source_value),
+                    'target_model_value': str(diff.target_value),
                 })
 
         # Schema differences
@@ -422,25 +422,25 @@ class ComparisonResult:
                 rows.append({
                     'category': 'schema',
                     'item': col,
-                    'difference_type': 'only_in_model_a',
-                    'model_a_value': 'present',
-                    'model_b_value': 'missing',
+                    'difference_type': 'only_in_source_model',
+                    'source_model_value': 'present',
+                    'target_model_value': 'missing',
                 })
             for col in self.schema.only_in_target:
                 rows.append({
                     'category': 'schema',
                     'item': col,
-                    'difference_type': 'only_in_model_b',
-                    'model_a_value': 'missing',
-                    'model_b_value': 'present',
+                    'difference_type': 'only_in_target_model',
+                    'source_model_value': 'missing',
+                    'target_model_value': 'present',
                 })
             for col, (type_a, type_b) in self.schema.type_mismatches.items():
                 rows.append({
                     'category': 'schema',
                     'item': col,
                     'difference_type': 'type_mismatch',
-                    'model_a_value': str(type_a),
-                    'model_b_value': str(type_b),
+                    'source_model_value': str(type_a),
+                    'target_model_value': str(type_b),
                 })
 
         # Spec differences
@@ -451,16 +451,16 @@ class ComparisonResult:
                         'category': f'spec_{spec_type}',
                         'item': item,
                         'difference_type': 'only_in_source',
-                        'model_a_value': 'present',
-                        'model_b_value': 'missing',
+                        'source_model_value': 'present',
+                        'target_model_value': 'missing',
                     })
                 for item in self.spec.only_in_target.get(spec_type, []):
                     rows.append({
                         'category': f'spec_{spec_type}',
                         'item': item,
                         'difference_type': 'only_in_target',
-                        'model_a_value': 'missing',
-                        'model_b_value': 'present',
+                        'source_model_value': 'missing',
+                        'target_model_value': 'present',
                     })
 
         # Asset differences
@@ -477,24 +477,24 @@ class ComparisonResult:
                         'category': asset_name,
                         'item': item,
                         'difference_type': 'only_in_source',
-                        'model_a_value': 'present',
-                        'model_b_value': 'missing',
+                        'source_model_value': 'present',
+                        'target_model_value': 'missing',
                     })
                 for item in asset_comp.only_in_target:
                     rows.append({
                         'category': asset_name,
                         'item': item,
                         'difference_type': 'only_in_target',
-                        'model_a_value': 'missing',
-                        'model_b_value': 'present',
+                        'source_model_value': 'missing',
+                        'target_model_value': 'present',
                     })
                 for name, diff in asset_comp.definition_differences.items():
                     rows.append({
                         'category': asset_name,
                         'item': name,
                         'difference_type': 'definition_mismatch',
-                        'model_a_value': str(diff.source_value),
-                        'model_b_value': str(diff.target_value),
+                        'source_model_value': str(diff.source_value),
+                        'target_model_value': str(diff.target_value),
                     })
 
         return pd.DataFrame(rows)
@@ -512,13 +512,13 @@ class ModelComparator:
 
         # Fetch models (potentially from different instances)
         with connection_context(URL_A, TOKEN_A):
-            model_a = fdl.Model.from_name(project_id=proj_a.id, name='model_v1')
+            source_model = fdl.Model.from_name(project_id=proj_a.id, name='model_v1')
 
         with connection_context(URL_B, TOKEN_B):
-            model_b = fdl.Model.from_name(project_id=proj_b.id, name='model_v2')
+            target_model = fdl.Model.from_name(project_id=proj_b.id, name='model_v2')
 
         # Compare models
-        comparator = ModelComparator(model_a, model_b)
+        comparator = ModelComparator(source_model, target_model)
         result = comparator.compare_all()
 
         # Display and export
@@ -528,18 +528,18 @@ class ModelComparator:
         ```
     """
 
-    def __init__(self, model_a: fdl.Model, model_b: fdl.Model):
+    def __init__(self, source_model: fdl.Model, target_model: fdl.Model):
         """Initialize comparator with two models.
 
         Args:
-            model_a: First model to compare
-            model_b: Second model to compare
+            source_model: First model to compare
+            target_model: Second model to compare
         """
-        self.model_a = model_a
-        self.model_b = model_b
+        self.source_model = source_model
+        self.target_model = target_model
         self.result = ComparisonResult(
-            model_a_name=f"{model_a.name}",
-            model_b_name=f"{model_b.name}",
+            source_model_name=f"{source_model.name}",
+            target_model_name=f"{target_model.name}",
         )
 
     def compare_configuration(self) -> ConfigurationComparison:
@@ -551,29 +551,29 @@ class ModelComparator:
         comp = ConfigurationComparison()
 
         # Compare task
-        task_a = getattr(self.model_a, 'task', None)
-        task_b = getattr(self.model_b, 'task', None)
+        task_a = getattr(self.source_model, 'task', None)
+        task_b = getattr(self.target_model, 'task', None)
         comp.task_match = task_a == task_b
         if not comp.task_match:
             comp.differences['task'] = ValueDifference(task_a, task_b, 'task')
 
         # Compare event ID column
-        event_id_a = getattr(self.model_a, 'event_id_col', None)
-        event_id_b = getattr(self.model_b, 'event_id_col', None)
+        event_id_a = getattr(self.source_model, 'event_id_col', None)
+        event_id_b = getattr(self.target_model, 'event_id_col', None)
         comp.event_id_col_match = event_id_a == event_id_b
         if not comp.event_id_col_match:
             comp.differences['event_id_col'] = ValueDifference(event_id_a, event_id_b, 'event_id_col')
 
         # Compare event timestamp column
-        event_ts_a = getattr(self.model_a, 'event_ts_col', None)
-        event_ts_b = getattr(self.model_b, 'event_ts_col', None)
+        event_ts_a = getattr(self.source_model, 'event_ts_col', None)
+        event_ts_b = getattr(self.target_model, 'event_ts_col', None)
         comp.event_ts_col_match = event_ts_a == event_ts_b
         if not comp.event_ts_col_match:
             comp.differences['event_ts_col'] = ValueDifference(event_ts_a, event_ts_b, 'event_ts_col')
 
         # Compare task parameters (if present)
-        task_params_a = getattr(self.model_a, 'task_params', None)
-        task_params_b = getattr(self.model_b, 'task_params', None)
+        task_params_a = getattr(self.source_model, 'task_params', None)
+        task_params_b = getattr(self.target_model, 'task_params', None)
         comp.task_params_match = task_params_a == task_params_b
         if not comp.task_params_match:
             comp.differences['task_params'] = ValueDifference(task_params_a, task_params_b, 'task_params')
@@ -588,8 +588,8 @@ class ModelComparator:
             SchemaComparison from fiddler_utils.schema
         """
         comp = SchemaValidator.compare_schemas(
-            source_model=self.model_a,
-            target_model=self.model_b,
+            source_model=self.source_model,
+            target_model=self.target_model,
             strict=True
         )
 
@@ -604,8 +604,8 @@ class ModelComparator:
         """
         comp = SpecComparison()
 
-        spec_a = self.model_a.spec
-        spec_b = self.model_b.spec
+        spec_a = self.source_model.spec
+        spec_b = self.target_model.spec
 
         # Compare each spec attribute
         for attr in ['inputs', 'outputs', 'targets', 'decisions', 'metadata']:
@@ -719,8 +719,8 @@ class ModelComparator:
 
         try:
             # Fetch assets for both models
-            assets_a = list(list_class.list(model_id=self.model_a.id))
-            assets_b = list(list_class.list(model_id=self.model_b.id))
+            assets_a = list(list_class.list(model_id=self.source_model.id))
+            assets_b = list(list_class.list(model_id=self.target_model.id))
 
             # Create dictionaries keyed by name (using standardized key extraction)
             dict_a = {self._get_asset_key(asset): value_extractor(asset) for asset in assets_a}
@@ -815,7 +815,7 @@ class ModelComparator:
         try:
             # Charts are project-level, not model-level assets
             # We can only check if both models exist in the same project
-            if self.model_a.project_id != self.model_b.project_id:
+            if self.source_model.project_id != self.target_model.project_id:
                 logger.warning(
                     "[ModelComparator] Charts comparison skipped: "
                     "models are in different projects"
@@ -889,7 +889,7 @@ class ModelComparator:
                 include_charts=include_charts if include_charts is not None else True,
             )
 
-        logger.info(f"[ModelComparator] Starting comprehensive comparison: '{self.model_a.name}' vs '{self.model_b.name}'")
+        logger.info(f"[ModelComparator] Starting comprehensive comparison: '{self.source_model.name}' vs '{self.target_model.name}'")
 
         if config.include_configuration:
             self.result.configuration = self.compare_configuration()

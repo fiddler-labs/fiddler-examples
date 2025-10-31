@@ -15,6 +15,7 @@ from fiddler_utils import (
     SegmentManager,
     CustomMetricManager,
     SchemaValidator,
+    configure_fiddler_logging,
 )
 
 # ============================================================================
@@ -44,6 +45,13 @@ METRICS_TO_EXPORT = []  # e.g., ['revenue_lost', 'accuracy']
 
 
 def main():
+    # --------------------------------------------------------------------
+    # Optional: Suppress verbose Fiddler client logs (recommended)
+    # --------------------------------------------------------------------
+    # The Fiddler client can be quite verbose. This suppresses logs to ERROR level.
+    configure_fiddler_logging(level='ERROR')
+
+
     print('=' * 70)
     print('FIDDLER ASSET EXPORT/IMPORT DEMO')
     print('=' * 70)
@@ -229,8 +237,11 @@ def main():
 def simple_copy_example():
     """Example of simplest possible asset copy within same instance."""
 
+    # Suppress verbose logs (recommended)
+    configure_fiddler_logging(level='ERROR')
+
     # Initialize connection
-    get_or_init(url=SOURCE_URL, token=SOURCE_TOKEN)
+    get_or_init(url=SOURCE_URL, token=SOURCE_TOKEN, log_level='ERROR')
 
     # Get models
     proj = fdl.Project.from_name(SOURCE_PROJECT)
