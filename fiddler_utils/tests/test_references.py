@@ -83,7 +83,7 @@ class TestFindAlertsUsingMetric:
 class TestFindChartsUsingMetric:
     """Test finding charts that reference a custom metric."""
 
-    @patch('fiddler_utils.assets.references.ChartManager')
+    @patch('fiddler_utils.assets.charts.ChartManager')
     @patch('fiddler_utils.assets.references.fdl')
     def test_find_charts_with_matches(self, mock_fdl, mock_chart_manager_class):
         """Test finding charts that reference a metric."""
@@ -143,7 +143,7 @@ class TestFindChartsUsingMetric:
         assert chart2 in result
         assert chart3 not in result
 
-    @patch('fiddler_utils.assets.references.ChartManager')
+    @patch('fiddler_utils.assets.charts.ChartManager')
     @patch('fiddler_utils.assets.references.fdl')
     def test_find_charts_api_unavailable(self, mock_fdl, mock_chart_manager_class):
         """Test handling when Chart API is unavailable."""
@@ -300,7 +300,7 @@ class TestMigrateAlertMetricReference:
 class TestMigrateChartMetricReference:
     """Test migrating chart references to new metric UUID."""
 
-    @patch('fiddler_utils.assets.references.ChartManager')
+    @patch('fiddler_utils.assets.charts.ChartManager')
     @patch('fiddler_utils.assets.references.fdl')
     def test_migrate_chart_success(self, mock_fdl, mock_chart_manager_class):
         """Test successful chart migration."""
@@ -343,7 +343,7 @@ class TestMigrateChartMetricReference:
         assert mock_chart['data_source']['queries'][0]['metric'] == 'new-metric-456'
         assert mock_chart['data_source']['queries'][0]['metric_name'] == 'test_metric'
 
-    @patch('fiddler_utils.assets.references.ChartManager')
+    @patch('fiddler_utils.assets.charts.ChartManager')
     @patch('fiddler_utils.assets.references.fdl')
     def test_migrate_chart_wrong_metric(self, mock_fdl, mock_chart_manager_class):
         """Test when chart doesn't reference the expected metric."""
@@ -417,7 +417,7 @@ class TestSafeUpdateMetric:
         mock_migrate_alert.return_value = True
 
         # Setup validation mock
-        with patch('fiddler_utils.assets.references.CustomMetricManager') as mock_mgr_class:
+        with patch('fiddler_utils.assets.metrics.CustomMetricManager') as mock_mgr_class:
             mock_mgr = Mock()
             mock_mgr.validate_metric_definition.return_value = (True, '')
             mock_mgr_class.return_value = mock_mgr
@@ -466,11 +466,14 @@ class TestSafeUpdateMetric:
         mock_refs = {
             'charts': [],
             'alerts': [],
+            'chart_count': 0,
+            'alert_count': 0,
+            'total_count': 0,
             'has_references': False
         }
         mock_find_refs.return_value = mock_refs
 
-        with patch('fiddler_utils.assets.references.CustomMetricManager') as mock_mgr_class:
+        with patch('fiddler_utils.assets.metrics.CustomMetricManager') as mock_mgr_class:
             mock_mgr = Mock()
             mock_mgr.validate_metric_definition.return_value = (True, '')
             mock_mgr_class.return_value = mock_mgr
@@ -495,7 +498,7 @@ class TestSafeUpdateMetric:
         mock_model = Mock()
         mock_fdl.Model.get.return_value = mock_model
 
-        with patch('fiddler_utils.assets.references.CustomMetricManager') as mock_mgr_class:
+        with patch('fiddler_utils.assets.metrics.CustomMetricManager') as mock_mgr_class:
             mock_mgr = Mock()
             mock_mgr.validate_metric_definition.return_value = (False, 'Invalid FQL')
             mock_mgr_class.return_value = mock_mgr

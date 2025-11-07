@@ -59,7 +59,7 @@ class TestValidateMetricSyntaxLocal:
 
         assert result['valid'] is True
         assert result['has_errors'] is False
-        assert result['metadata']['has_aggregations'] is True
+        assert result['metadata']['is_aggregation'] is True
 
     @patch('fiddler_utils.testing.fql')
     def test_syntax_error(self, mock_fql):
@@ -75,7 +75,7 @@ class TestValidateMetricSyntaxLocal:
         assert 'Syntax error' in result['errors'][0]
 
     @patch('fiddler_utils.testing.fql')
-    @patch('fiddler_utils.testing.SchemaValidator')
+    @patch('fiddler_utils.schema.SchemaValidator')
     def test_missing_columns(self, mock_validator, mock_fql):
         """Test detection of missing columns."""
         mock_fql.validate_fql_syntax.return_value = (True, '')
@@ -353,11 +353,13 @@ class TestBatchTestMetrics:
     @patch('fiddler_utils.testing.time')
     def test_batch_test_all_valid(self, mock_time, mock_test_metric):
         """Test batch testing with all valid metrics."""
-        # Mock all metrics as valid
-        mock_test_metric.return_value = {
-            'valid': True,
-            'error': None
-        }
+        # Mock all metrics as valid - use side_effect to return a new dict each time
+        # This is important because batch_test_metrics modifies the returned dict
+        mock_test_metric.side_effect = [
+            {'valid': True, 'error': None},
+            {'valid': True, 'error': None},
+            {'valid': True, 'error': None},
+        ]
 
         definitions = [
             {'name': 'FP Count', 'definition': 'sum(if(fp(), 1, 0))'},

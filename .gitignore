@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 .DS_Store
-pyproject.toml
+# Note: pyproject.toml is now tracked (modern Python packaging standard)
+# uv.lock can remain ignored as it's project-specific
 uv.lock

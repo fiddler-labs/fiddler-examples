@@ -13,12 +13,20 @@ class FiddlerUtilsError(Exception):
     pass
 
 
-class ConnectionError(FiddlerUtilsError):
-    """Raised when there are issues connecting to Fiddler."""
+class FiddlerConnectionError(FiddlerUtilsError):
+    """Raised when there are issues connecting to Fiddler.
+
+    Note: Renamed from ConnectionError to avoid shadowing Python's built-in
+    ConnectionError exception.
+    """
 
     def __init__(self, message: str, url: Optional[str] = None):
         self.url = url
         super().__init__(message)
+
+
+# Backward compatibility alias (deprecated)
+ConnectionError = FiddlerConnectionError
 
 
 class ValidationError(FiddlerUtilsError):

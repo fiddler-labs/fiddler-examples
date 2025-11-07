@@ -27,6 +27,8 @@ Example:
     ```
 """
 
+from __future__ import annotations
+
 import logging
 
 __version__ = '0.1.0'
@@ -107,7 +109,8 @@ from .comparison import (
 # Import public API - Exceptions
 from .exceptions import (
     FiddlerUtilsError,
-    ConnectionError,
+    FiddlerConnectionError,
+    ConnectionError,  # Backward compatibility alias
     ValidationError,
     SchemaValidationError,
     FQLError,
@@ -171,7 +174,8 @@ __all__ = [
     'ValueDifference',
     # Exceptions
     'FiddlerUtilsError',
-    'ConnectionError',
+    'FiddlerConnectionError',
+    'ConnectionError',  # Deprecated alias for backward compatibility
     'ValidationError',
     'SchemaValidationError',
     'FQLError',
@@ -183,14 +187,14 @@ __all__ = [
 
 def configure_logging(
     level: str = 'INFO',
-    format: str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers: list = None,
+    format_string: str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers: list[logging.Handler] | None = None,
 ):
     """Configure logging for fiddler_utils package.
 
     Args:
         level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        format: Log message format
+        format_string: Log message format string
         handlers: Optional list of logging handlers
 
     Example:
@@ -203,10 +207,12 @@ def configure_logging(
         # Custom format
         configure_logging(
             level='INFO',
-            format='%(levelname)s - %(message)s'
+            format_string='%(levelname)s - %(message)s'
         )
         ```
     """
+    if handlers is None:
+        handlers = []
     logger = logging.getLogger(__name__)
     logger.setLevel(getattr(logging, level.upper()))
 
@@ -219,7 +225,7 @@ def configure_logging(
     else:
         # Add default console handler
         handler = logging.StreamHandler()
-        handler.setFormatter(logging.Formatter(format))
+        handler.setFormatter(logging.Formatter(format_string))
         logger.addHandler(handler)
 
     logger.info(f'Fiddler Utils logging configured at {level} level')

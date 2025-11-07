@@ -16,7 +16,7 @@ except ImportError:
         'fiddler-client is required. Install it with: pip install fiddler-client'
     )
 
-from .exceptions import ConnectionError
+from .exceptions import FiddlerConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ def get_or_init(
 
     if url is None or token is None:
         if not _initialized:
-            raise ConnectionError('url and token are required for first initialization')
+            raise FiddlerConnectionError('url and token are required for first initialization')
         # Use cached values
         url = _current_url
         token = _current_token
@@ -122,7 +122,7 @@ def get_or_init(
 
         logger.info(f'Successfully connected to {url}')
     except Exception as e:
-        raise ConnectionError(f'Failed to connect to Fiddler: {str(e)}', url=url)
+        raise FiddlerConnectionError(f'Failed to connect to Fiddler: {str(e)}', url=url)
 
 
 def reset_connection() -> None:
@@ -260,7 +260,7 @@ class ConnectionManager:
             ```
         """
         if name not in self.connections:
-            raise ConnectionError(
+            raise FiddlerConnectionError(
                 f"Connection '{name}' not found. "
                 f'Available: {list(self.connections.keys())}'
             )

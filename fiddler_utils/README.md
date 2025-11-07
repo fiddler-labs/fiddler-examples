@@ -457,11 +457,15 @@ For questions or issues with `fiddler_utils`:
 
 ### License
 
-Internal use only - NOT for external distribution.
+This package is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.
+
+While this package is open source and may be redistributed under the MIT License terms,
+it is designed specifically for use with Fiddler AI products and is primarily intended
+for Fiddler customers and field engineers.
 
 ---
 
-**Version:** 0.2.0
+**Version:** 0.1.0
 **Status:** Production Ready (Phases 1-4 Complete)
 **Last Updated:** 2025-10-30
 
