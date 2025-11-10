@@ -64,7 +64,7 @@ class ChartManager(BaseAssetManager[Dict]):
         """Initialize ChartManager.
 
         Args:
-            url: Fiddler instance URL (e.g., 'https://demo.fiddler.ai')
+            url: Fiddler instance URL (e.g., 'https://acme.cloud.fiddler.ai')
             token: API token for authentication
 
         Note: If url/token not provided, they will be read from current
@@ -95,7 +95,7 @@ class ChartManager(BaseAssetManager[Dict]):
                     # We'll need the user to pass these explicitly
                     raise ValueError(
                         'ChartManager requires url and token to be passed explicitly. '
-                        "Example: ChartManager(url='https://demo.fiddler.ai', token='abc123')"
+                        "Example: ChartManager(url='https://acme.cloud.fiddler.ai', token='abc123')"
                     )
                 except Exception as e:
                     raise ValueError(

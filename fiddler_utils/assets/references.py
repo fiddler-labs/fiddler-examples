@@ -122,7 +122,7 @@ def find_charts_using_metric(
         charts = find_charts_using_metric(
             metric_id=metric.id,
             project_id=project.id,
-            url='https://demo.fiddler.ai',
+            url='https://acme.cloud.fiddler.ai',
             token='your-api-token'
         )
 
@@ -456,7 +456,7 @@ def safe_update_metric(
             new_definition='sum(if(tp(), 1, 0)) / sum(1)',
             auto_migrate=True,
             project_id=project.id,
-            url='https://demo.fiddler.ai',
+            url='https://acme.cloud.fiddler.ai',
             token='your-api-token'
         )
 
