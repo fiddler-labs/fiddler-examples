@@ -42,7 +42,7 @@ pip install -e .
 from fiddler_utils import get_or_init
 
 # Initialize Fiddler client
-get_or_init(url='https://demo.fiddler.ai', token='your_token')
+get_or_init(url='https://acme.cloud.fiddler.ai', token='your_token')
 
 # Subsequent calls are no-ops (client already initialized)
 get_or_init()  # Does nothing, uses existing connection

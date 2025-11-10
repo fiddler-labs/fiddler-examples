@@ -15,7 +15,7 @@ Example:
     from fiddler_utils import SchemaValidator, fql
 
     # Initialize connection
-    get_or_init(url='https://demo.fiddler.ai', token='abc123')
+    get_or_init(url='https://acme.cloud.fiddler.ai', token='abc123')
 
     # Extract columns from FQL expression
     columns = fql.extract_columns('"age" > 30 and "status" == \'active\'')

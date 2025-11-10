@@ -65,7 +65,7 @@ class DashboardManager(BaseAssetManager[Dict]):
         """Initialize DashboardManager.
 
         Args:
-            url: Fiddler instance URL (e.g., 'https://demo.fiddler.ai')
+            url: Fiddler instance URL (e.g., 'https://acme.cloud.fiddler.ai')
             token: API token for authentication
 
         Note: If url/token not provided, they will be read from current
@@ -85,7 +85,7 @@ class DashboardManager(BaseAssetManager[Dict]):
             if not url or not token:
                 raise ValueError(
                     'DashboardManager requires url and token to be passed explicitly. '
-                    "Example: DashboardManager(url='https://demo.fiddler.ai', token='abc123')"
+                    "Example: DashboardManager(url='https://acme.cloud.fiddler.ai', token='abc123')"
                 )
 
             self._client = RequestClient(

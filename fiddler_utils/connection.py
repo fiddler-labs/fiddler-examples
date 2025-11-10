@@ -57,7 +57,7 @@ def get_or_init(
 
         # Initialize with suppressed Fiddler logs (most common)
         get_or_init(
-            url='https://demo.fiddler.ai',
+            url='https://acme.cloud.fiddler.ai',
             token='abc123',
             log_level='ERROR'
         )
