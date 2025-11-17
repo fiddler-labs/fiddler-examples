@@ -583,6 +583,7 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 - `validate_and_preview_metric()` - Complete validation workflow
 - `batch_test_metrics()` - Test multiple definitions efficiently
 - `cleanup_orphaned_test_metrics()` - Remove leftover test metrics
+- `query_custom_metric()` - Get the value of custom metric on previously published data
 
 **Use cases:**
 - **Cross-model migration:** Copy custom metrics/segments between models with different schemas
