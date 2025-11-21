@@ -419,7 +419,20 @@ class SchemaValidator:
             ```
         """
         model_columns = SchemaValidator.get_column_names(model)
-        missing_columns = [col for col in columns if col not in model_columns]
+
+        missing_columns = []
+        
+        # For each column, check if it appears as a substring in any model column name
+        # This is because Fiddler appends prefixes and suffixes to custom feature column names
+        missing_columns = []
+        for col in columns:
+            found = False
+            for model_col in model_columns:
+                if col == model_col or col in model_col or model_col in col:
+                    found = True
+                    break
+            if not found:
+                missing_columns.append(col)
 
         is_valid = len(missing_columns) == 0
 
