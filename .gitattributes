@@ -13,8 +13,10 @@
 *.h5 filter=lfs diff=lfs merge=lfs -text
 *.joblib filter=lfs diff=lfs merge=lfs -text
 *.onnx filter=lfs diff=lfs merge=lfs -text
+
 # TensorFlow models
 *.pb filter=lfs diff=lfs merge=lfs -text
+
 # NumPy arrays
 *.npz filter=lfs diff=lfs merge=lfs -text
 *.npy filter=lfs diff=lfs merge=lfs -text
