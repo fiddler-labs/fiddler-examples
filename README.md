@@ -37,6 +37,59 @@ This repo contains the example notebooks listed below. You can launch them in a 
 * [Ranking Model - Monitoring](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb)
 * [Regression Model - Monitoring](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb)
 
+## REST API Examples
+
+The [`api-examples`](./api-examples) directory contains validation notebooks and reference implementations for working with the Fiddler REST API. These examples are ideal for language-agnostic integration and production deployments.
+
+### Event Publishing
+
+* **[Python Publishing Examples](https://github.com/fiddler-labs/fiddler-examples/blob/main/api-examples/publishing/python/validate-rest-api-examples.ipynb)** - Comprehensive REST API usage in Python
+  * Batch publishing (file upload + publish with Job tracking)
+  * Streaming publishing (direct events with queue submission)
+  * Event updates (PATCH operations)
+  * Production-ready publisher with exponential backoff retry logic
+
+* **[TypeScript Publishing Examples](https://github.com/fiddler-labs/fiddler-examples/blob/main/api-examples/publishing/typescript/validate-typescript-rest-api-example.nnb)** - TypeScript REST API patterns
+  * Native `fetch` API implementation
+  * Type-safe interfaces for Fiddler API v3.0
+  * Production-ready publisher class with retry logic
+  * Comprehensive error handling
+
+**Key Concepts:**
+- Fiddler automatically selects processing mode based on data source (files → batch with Job tracking, JSON/lists → streaming with queue submission)
+- Only PRODUCTION events can be updated (PRE_PRODUCTION events are immutable)
+- All operations return HTTP 202 Accepted for consistency
+
+See the [api-examples README](./api-examples/README.md) for setup instructions and additional details.
+
+
+
+## REST API Examples
+
+The [`api-examples`](./api-examples) directory contains validation notebooks and reference implementations for working with the Fiddler REST API. These examples are ideal for language-agnostic integration and production deployments.
+
+### Event Publishing
+
+* **[Python Publishing Examples](https://github.com/fiddler-labs/fiddler-examples/blob/main/api-examples/publishing/python/validate-rest-api-examples.ipynb)** - Comprehensive REST API usage in Python
+  * Batch publishing (file upload + publish with Job tracking)
+  * Streaming publishing (direct events with queue submission)
+  * Event updates (PATCH operations)
+  * Production-ready publisher with exponential backoff retry logic
+
+* **[TypeScript Publishing Examples](https://github.com/fiddler-labs/fiddler-examples/blob/main/api-examples/publishing/typescript/validate-typescript-rest-api-example.nnb)** - TypeScript REST API patterns
+  * Native `fetch` API implementation
+  * Type-safe interfaces for Fiddler API v3.0
+  * Production-ready publisher class with retry logic
+  * Comprehensive error handling
+
+**Key Concepts:**
+- Fiddler automatically selects processing mode based on data source (files → batch with Job tracking, JSON/lists → streaming with queue submission)
+- Only PRODUCTION events can be updated (PRE_PRODUCTION events are immutable)
+- All operations return HTTP 202 Accepted for consistency
+
+See the [api-examples README](./api-examples/README.md) for setup instructions and additional details.
+
+
 ## Fiddler Utils Package - Admin Automation Library
 
 The [`fiddler_utils`](./fiddler_utils) package is an admin automation library designed to reduce code duplication across utility scripts and notebooks. While **not part of the official Fiddler SDK**, it is available for both Fiddler field engineers and customers to use and extend.
