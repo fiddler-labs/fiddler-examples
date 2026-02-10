@@ -37,6 +37,14 @@ This repo contains the example notebooks listed below. You can launch them in a 
 * [Ranking Model - Monitoring](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb)
 * [Regression Model - Monitoring](https://github.com/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb)
 
+## Cookbooks
+
+Use-case oriented notebooks that demonstrate end-to-end workflows for solving real AI evaluation and monitoring problems with Fiddler. Each cookbook has a companion guide on the [Fiddler docs site](https://docs.fiddler.ai/developers/cookbooks).
+
+* [RAG Evaluation Fundamentals](https://github.com/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_RAG_Evaluation_Fundamentals.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_RAG_Evaluation_Fundamentals.ipynb) — Evaluate RAG quality with built-in evaluators
+* [RAG Experiments at Scale](https://github.com/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_RAG_Experiments_at_Scale.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_RAG_Experiments_at_Scale.ipynb) — Compare RAG pipeline configurations systematically
+* [Custom Judge Evaluators](https://github.com/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_Custom_Judge_Evaluators.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_Custom_Judge_Evaluators.ipynb) — Create domain-specific evaluation criteria
+
 ## Fiddler Utils Package - Admin Automation Library
 
 The [`fiddler_utils`](./fiddler_utils) package is an admin automation library designed to reduce code duplication across utility scripts and notebooks. While **not part of the official Fiddler SDK**, it is available for both Fiddler field engineers and customers to use and extend.
