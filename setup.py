@@ -18,7 +18,7 @@ if readme_file.exists():
 
 setup(
     name="fiddler-utils",
-    version="0.1.0",
+    version="0.1.2",
     description="Admin automation library for Fiddler administrative tasks",
     long_description=long_description,
     long_description_content_type="text/markdown",

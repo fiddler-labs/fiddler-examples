@@ -1,13 +1,14 @@
 """OpenTelemetry ingestion utilities for Fiddler.
 
-This module provides helpers for ingesting pandas DataFrames into Fiddler
-via OpenTelemetry Protocol (OTLP).
+This module provides helpers for ingesting data into Fiddler via OpenTelemetry
+Protocol (OTLP): log_pandas_traces for pandas DataFrames and log_event_traces
+for lists of event dicts (e.g. from JSON or APIs, without loading into pandas).
 """
 
 import json
 import logging
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union, Tuple
+from typing import Callable, Dict, List, Optional, Any, Union, Tuple
 import pandas as pd
 
 try:
@@ -62,7 +63,7 @@ class BatchConfig:
         )
         
         # Use with ingestion function
-        ingest_pandas_to_otlp(df, client, batch_config=config)
+        log_pandas_traces(df, client, batch_config=config)
         ```
     """
     max_export_batch_size: int = 50
@@ -180,6 +181,131 @@ def _serialize_value(value: Any) -> str:
         return str(value)
 
 
+def _ingest_records_to_otlp(
+    fiddler_client: RequestClient,
+    records: List[Dict[str, Any]],
+    start_ns_list: List[int],
+    end_ns_list: List[int],
+    column_mapping: Dict[str, str],
+    static_attributes: Dict[str, Any],
+    batch_config: BatchConfig,
+    index_for_errors: Optional[Callable[[int], Any]] = None,
+) -> None:
+    """Internal: send a list of record dicts to Fiddler via OTLP.
+    
+    Shared by log_pandas_traces and log_event_traces. Caller must ensure
+    len(records) == len(start_ns_list) == len(end_ns_list).
+    """
+    if index_for_errors is None:
+        index_for_errors = lambda i: i  # noqa: E731
+    n = len(records)
+    fiddler_url, auth_token = _extract_url_and_token(fiddler_client)
+    otlp_endpoint = f'{fiddler_url.rstrip("/")}/v1/traces'
+    application_id = static_attributes.get('application.id')
+    if not application_id and hasattr(fiddler_client, '_default_headers'):
+        headers = fiddler_client._default_headers
+        if headers:
+            application_id = (
+                headers.get('Fiddler-Application-Id')
+                or headers.get('fiddler-application-id')
+            )
+    resource_attributes = {}
+    if application_id:
+        resource_attributes['application.id'] = str(application_id)
+    resource = Resource.create(resource_attributes) if resource_attributes else Resource.create({})
+    tracer_provider = TracerProvider(resource=resource)
+    otlp_headers = {'Authorization': f'Bearer {auth_token}'}
+    if application_id:
+        otlp_headers['Fiddler-Application-Id'] = str(application_id)
+    otlp_exporter = OTLPSpanExporter(
+        endpoint=otlp_endpoint,
+        headers=otlp_headers,
+        timeout=batch_config.export_timeout_seconds,
+    )
+    otlp_processor = BatchSpanProcessor(
+        otlp_exporter,
+        max_queue_size=batch_config.max_queue_size,
+        max_export_batch_size=batch_config.max_export_batch_size,
+        schedule_delay_millis=int(batch_config.schedule_delay_seconds * 1000),
+        export_timeout_millis=int(batch_config.export_timeout_seconds * 1000),
+    )
+    tracer_provider.add_span_processor(otlp_processor)
+    tracer = tracer_provider.get_tracer(__name__)
+    logger.info(f'OpenTelemetry configured with endpoint: {otlp_endpoint}')
+    if application_id:
+        logger.info(f'Using Fiddler Application ID: {application_id}')
+    logger.info(f'Starting ingestion of {n} rows...')
+    static_serialized = {k: _serialize_value(v) for k, v in static_attributes.items()}
+    rows_attrs = []
+    for record in records:
+        attrs = dict(static_serialized)
+        for col_name, attr_name in column_mapping.items():
+            if col_name in record:
+                attrs[attr_name] = _serialize_value(record[col_name])
+        if 'gen_ai.agent.name' not in attrs:
+            attrs['gen_ai.agent.name'] = 'my_agent'
+        rows_attrs.append(attrs)
+    successful_rows = 0
+    failed_rows = 0
+    errors = []
+    for i in range(n):
+        index = index_for_errors(i)
+        start_ns = start_ns_list[i]
+        end_ns = end_ns_list[i]
+        try:
+            span = tracer.start_span(
+                name='span',
+                start_time=start_ns,
+                kind=trace.SpanKind.CLIENT,
+            )
+            try:
+                for attr_name, value in rows_attrs[i].items():
+                    span.set_attribute(attr_name, value)
+                span.set_status(trace.Status(trace.StatusCode.OK))
+                successful_rows += 1
+            except Exception as e:
+                logger.error(f'Error processing row {index}: {str(e)}')
+                span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+                failed_rows += 1
+                errors.append((index, str(e)))
+            finally:
+                span.end(end_time=end_ns)
+        except Exception as e:
+            logger.error(f'Failed to create span for row {index}: {str(e)}')
+            failed_rows += 1
+            errors.append((index, str(e)))
+    try:
+        tracer_provider.force_flush(timeout_millis=int(batch_config.export_timeout_seconds * 2000))
+        logger.info('Force flushed all spans to Fiddler')
+    except Exception as e:
+        error_type = type(e).__name__
+        error_msg = str(e)
+        logger.error(f'Error during force flush ({error_type}): {error_msg}')
+        if 'SSL' in error_type or 'SSLError' in error_type or 'SSL' in error_msg:
+            logger.warning(
+                'SSL error detected. This may be due to a known Python 3.10-3.12 bug '
+                'with large HTTPS requests. Consider:\n'
+                '  1. Processing smaller DataFrames (split into chunks)\n'
+                '  2. Upgrading to Python 3.13+\n'
+                '  3. Some spans may have been successfully sent before the error'
+            )
+    if successful_rows > 0:
+        logger.info(f'✅ Successfully ingested {successful_rows} rows')
+    if failed_rows > 0:
+        logger.warning(f'⚠️ Failed to ingest {failed_rows} rows')
+        for idx, error in errors[:10]:
+            logger.warning(f'  Row {idx}: {error}')
+        if len(errors) > 10:
+            logger.warning(f'  ... and {len(errors) - 10} more errors')
+    if successful_rows == 0 and failed_rows > 0:
+        raise RuntimeError(
+            f'All {failed_rows} rows failed to ingest. '
+            f'First error: {errors[0][1] if errors else "Unknown error"}'
+        )
+    if failed_rows == 0 and successful_rows > 0:
+        print(f'✅ Successfully ingested all {successful_rows} rows to Fiddler!')
+
+
 def log_pandas_traces(
     df: pd.DataFrame,
     fiddler_client: RequestClient,
@@ -228,7 +354,7 @@ def log_pandas_traces(
         ```python
         import pandas as pd
         from fiddler.libs.http_client import RequestClient
-        from fiddler_utils.assets.ingestion import ingest_pandas_to_otlp
+        from fiddler_utils.assets.ingestion import log_pandas_traces
         
         # Create sample data
         df = pd.DataFrame([
@@ -263,7 +389,7 @@ def log_pandas_traces(
         }
         
         # Ingest with default batch settings
-        ingest_pandas_to_otlp(
+        log_pandas_traces(
             df=df,
             fiddler_client=client,
             column_mapping=column_mapping,
@@ -274,7 +400,7 @@ def log_pandas_traces(
         from fiddler_utils.assets.ingestion import BatchConfig
         
         batch_config = BatchConfig.large_batches()  # Optimized for throughput
-        ingest_pandas_to_otlp(
+        log_pandas_traces(
             df=df,
             fiddler_client=client,
             column_mapping=column_mapping,
@@ -286,209 +412,152 @@ def log_pandas_traces(
     if df.empty:
         logger.warning('DataFrame is empty. Nothing to ingest.')
         return
-    
-    # Use provided batch config or default
+
     if batch_config is None:
         batch_config = BatchConfig.default()
-    
-    # Extract URL and token from fiddler_client
-    fiddler_url, auth_token = _extract_url_and_token(fiddler_client)
-    
-    # Construct OTLP endpoint
-    otlp_endpoint = f'{fiddler_url.rstrip("/")}/v1/traces'
-    
-    # Normalize column_mapping and static_attributes
     column_mapping = column_mapping or {}
     static_attributes = static_attributes or {}
-    
-    # Extract application ID from static_attributes for Fiddler-Application-Id header
-    # Fall back to fiddler_client._default_headers if not found in static_attributes
-    application_id = static_attributes.get('application.id')
-    
-    # Fallback to _default_headers if not found in static_attributes
-    if not application_id and hasattr(fiddler_client, '_default_headers'):
-        headers = fiddler_client._default_headers
-        if headers:
-            application_id = (
-                headers.get('Fiddler-Application-Id') or 
-                headers.get('fiddler-application-id')
-            )
-    
-    # Create Resource with application.id (required at Resource level)
-    resource_attributes = {}
-    if application_id:
-        resource_attributes['application.id'] = str(application_id)
-    
-    resource = Resource.create(resource_attributes) if resource_attributes else Resource.create({})
-    
-    # Initialize local TracerProvider (not global) to avoid singleton issues
-    # Pass resource to ensure application.id is set at Resource level
-    tracer_provider = TracerProvider(resource=resource)
-    
-    # Build OTLP headers
-    otlp_headers = {
-        'Authorization': f'Bearer {auth_token}',
-    }
-    if application_id:
-        otlp_headers['Fiddler-Application-Id'] = str(application_id)
-    
-    # Configure OTLP exporter with timeout to avoid SSL errors
-    # Note: Python 3.10-3.12 have known SSL issues with large HTTPS requests
-    # Using smaller batches and timeouts helps mitigate this
-    otlp_exporter = OTLPSpanExporter(
-        endpoint=otlp_endpoint,
-        headers=otlp_headers,
-        timeout=batch_config.export_timeout_seconds,
-    )
-    
-    # Add batch span processor with configurable batch sizes
-    # This helps mitigate Python 3.10-3.12 SSL EOF errors with large payloads
-    otlp_processor = BatchSpanProcessor(
-        otlp_exporter,
-        max_queue_size=batch_config.max_queue_size,
-        max_export_batch_size=batch_config.max_export_batch_size,
-        schedule_delay_millis=int(batch_config.schedule_delay_seconds * 1000),
-        export_timeout_millis=int(batch_config.export_timeout_seconds * 1000),
-    )
-    tracer_provider.add_span_processor(otlp_processor)
-    
-    # Get tracer from the configured provider (must be after adding processors)
-    # Use the provider's get_tracer method to ensure spans are associated correctly
-    tracer = tracer_provider.get_tracer(__name__)
-    
-    logger.info(f'OpenTelemetry configured with endpoint: {otlp_endpoint}')
-    if application_id:
-        logger.info(f'Using Fiddler Application ID: {application_id}')
-    logger.info(f'Starting ingestion of {len(df)} rows...')
-    
+
     # Determine start_time and end_time column names
-    # Look for 'start_time' and 'end_time' columns (these are not Fiddler attributes,
-    # but special columns used for span timestamps)
-    # If column_mapping has entries for these, use the mapped column names
     start_time_col = None
     end_time_col = None
-    
-    # Check if any columns are mapped to 'start_time' or 'end_time' attributes
-    # (though these aren't standard Fiddler attributes, allow for flexibility)
     for col, attr in column_mapping.items():
         if attr == 'start_time':
             start_time_col = col
         if attr == 'end_time':
             end_time_col = col
-    
-    # If not found in mapping, check for default column names
     if start_time_col is None and 'start_time' in df.columns:
         start_time_col = 'start_time'
+        
     if end_time_col is None and 'end_time' in df.columns:
         end_time_col = 'end_time'
-    
-    # Track success/failure
-    successful_rows = 0
-    failed_rows = 0
-    errors = []
-    
-    # Iterate through DataFrame rows
-    for index, row in df.iterrows():
-        try:
-            # Prepare timestamps
-            start_ns = _to_nanoseconds(
-                row.get(start_time_col) if start_time_col else None
-            )
-            end_ns = _to_nanoseconds(
-                row.get(end_time_col) if end_time_col else None
-            )
-            
-            # Create span using start_span (not start_as_current_span)
-            # This ensures spans are detached and valid for historical backfilling
-            span = tracer.start_span(
-                name='backfilled_operation',
-                start_time=start_ns,
-                kind=trace.SpanKind.CLIENT,
-            )
-            
-            try:
-                # Apply static attributes first
-                for attr_name, attr_value in static_attributes.items():
-                    span.set_attribute(attr_name, _serialize_value(attr_value))
-                
-                # Map DataFrame columns to Fiddler attributes
-                for col_name, attr_name in column_mapping.items():
-                    if col_name in row:
-                        value = row[col_name]
-                        span.set_attribute(
-                            attr_name,
-                            _serialize_value(value)
-                        )
-                
-                # Default gen_ai.agent.name if not provided in static_attributes or column_mapping
-                if 'gen_ai.agent.name' not in static_attributes:
-                    # Check if it was set from column_mapping
-                    agent_name_set = any(
-                        attr == 'gen_ai.agent.name' and col in row
-                        for col, attr in column_mapping.items()
-                    )
-                    
-                    if not agent_name_set:
-                        span.set_attribute('gen_ai.agent.name', 'my_agent')
-                
-                # Set status to OK
-                span.set_status(trace.Status(trace.StatusCode.OK))
-                successful_rows += 1
-                
-            except Exception as e:
-                error_msg = f'Error processing row {index}: {str(e)}'
-                logger.error(error_msg)
-                span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
-                failed_rows += 1
-                errors.append((index, str(e)))
-            
-            finally:
-                # End the span with explicit end timestamp
-                span.end(end_time=end_ns)
-                
-        except Exception as e:
-            error_msg = f'Failed to create span for row {index}: {str(e)}'
-            logger.error(error_msg)
-            failed_rows += 1
-            errors.append((index, str(e)))
-    
-    # Force flush to ensure all spans are sent
-    try:
-        tracer_provider.force_flush(timeout_millis=int(batch_config.export_timeout_seconds * 2000))  # 2x export timeout
-        logger.info('Force flushed all spans to Fiddler')
-    except Exception as e:
-        error_type = type(e).__name__
-        error_msg = str(e)
-        logger.error(f'Error during force flush ({error_type}): {error_msg}')
-        
-        # Provide helpful guidance for known SSL issues
-        if 'SSL' in error_type or 'SSLError' in error_type or 'SSL' in error_msg:
-            logger.warning(
-                'SSL error detected. This may be due to a known Python 3.10-3.12 bug '
-                'with large HTTPS requests. Consider:\n'
-                '  1. Processing smaller DataFrames (split into chunks)\n'
-                '  2. Upgrading to Python 3.13+\n'
-                '  3. Some spans may have been successfully sent before the error'
-            )
-    
-    # Print summary
-    if successful_rows > 0:
-        logger.info(f'✅ Successfully ingested {successful_rows} rows')
-    
-    if failed_rows > 0:
-        logger.warning(f'⚠️ Failed to ingest {failed_rows} rows')
-        for idx, error in errors[:10]:  # Show first 10 errors
-            logger.warning(f'  Row {idx}: {error}')
-        if len(errors) > 10:
-            logger.warning(f'  ... and {len(errors) - 10} more errors')
-    
-    if successful_rows == 0 and failed_rows > 0:
-        raise RuntimeError(
-            f'All {failed_rows} rows failed to ingest. '
-            f'First error: {errors[0][1] if errors else "Unknown error"}'
+
+    # Vectorize timestamp conversion and build records
+    now_ns = int(pd.Timestamp.now().timestamp() * 1e9)
+    n = len(df)
+    if start_time_col and start_time_col in df.columns:
+        start_dt = pd.to_datetime(df[start_time_col], errors='coerce')
+        start_ns_arr = start_dt.astype('int64').mask(start_dt.isna(), now_ns)
+    else:
+        start_ns_arr = pd.Series([now_ns] * n)
+    if end_time_col and end_time_col in df.columns:
+        end_dt = pd.to_datetime(df[end_time_col], errors='coerce')
+        end_ns_arr = end_dt.astype('int64').mask(end_dt.isna(), now_ns)
+    else:
+        end_ns_arr = pd.Series([now_ns] * n)
+    records = df.to_dict('records')
+    start_ns_list = [int(start_ns_arr.iloc[i]) for i in range(n)]
+    end_ns_list = [int(end_ns_arr.iloc[i]) for i in range(n)]
+
+    _ingest_records_to_otlp(
+        fiddler_client=fiddler_client,
+        records=records,
+        start_ns_list=start_ns_list,
+        end_ns_list=end_ns_list,
+        column_mapping=column_mapping,
+        static_attributes=static_attributes,
+        batch_config=batch_config,
+        index_for_errors=lambda i: df.index[i],
+    )
+
+
+def log_event_traces(
+    events: List[Dict[str, Any]],
+    fiddler_client: RequestClient,
+    column_mapping: Optional[Dict[str, str]] = None,
+    static_attributes: Optional[Dict[str, Any]] = None,
+    batch_config: Optional[BatchConfig] = None,
+) -> None:
+    """Ingest a list of event dicts into Fiddler via OpenTelemetry (OTLP).
+
+    Use this when events are already in record form (e.g. from JSON, APIs, or
+    storage) and you do not need to load into a pandas DataFrame. Each dict
+    should have the same shape as one row from ``df.to_dict("records")``.
+
+    Args:
+        events: List of dictionaries; each dict becomes one trace/span. Keys
+                are field names (e.g. 'prompt', 'response', 'start_time').
+        fiddler_client: An instance of RequestClient from fiddler.libs.http_client.
+        column_mapping: Optional mapping from event dict keys to Fiddler attribute
+                       names. Same semantics as in log_pandas_traces.
+        static_attributes: Optional attributes applied to every span. Same as
+                          in log_pandas_traces.
+        batch_config: Optional BatchConfig. If None, uses BatchConfig.default().
+
+    Raises:
+        ValueError: If URL or token cannot be extracted from fiddler_client.
+        RuntimeError: If all events fail to ingest.
+
+    Example:
+        ```python
+        from fiddler.libs.http_client import RequestClient
+        from fiddler_utils.assets.ingestion import log_event_traces
+
+        events = [
+            {
+                'prompt': 'What is the weather?',
+                'response': 'I can help with that...',
+                'start_time': '2025-01-08 10:00:00',
+                'end_time': '2025-01-08 10:00:02',
+                'model_name': 'gpt-4',
+            }
+        ]
+        column_mapping = {
+            'prompt': 'gen_ai.llm.input.user',
+            'response': 'gen_ai.llm.output',
+            'model_name': 'gen_ai.request.model',
+        }
+        log_event_traces(
+            events=events,
+            fiddler_client=client,
+            column_mapping=column_mapping,
+            static_attributes={'application.id': 'my-app-123'},
         )
-    
-    # Print success message if all rows were ingested successfully
-    if failed_rows == 0 and successful_rows > 0:
-        print(f'✅ Successfully ingested all {successful_rows} rows to Fiddler!')
+        ```
+    """
+    if not events:
+        logger.warning('events is empty. Nothing to ingest.')
+        return
+
+    if batch_config is None:
+        batch_config = BatchConfig.default()
+    column_mapping = column_mapping or {}
+    static_attributes = static_attributes or {}
+
+    # Resolve start_time / end_time keys from mapping or from event keys
+    start_time_col = None
+    end_time_col = None
+    for col, attr in column_mapping.items():
+        if attr == 'start_time':
+            start_time_col = col
+        if attr == 'end_time':
+            end_time_col = col
+    if start_time_col is None or end_time_col is None:
+        all_keys = set()
+        for evt in events:
+            all_keys.update(evt.keys())
+        if start_time_col is None and 'start_time' in all_keys:
+            start_time_col = 'start_time'
+        if end_time_col is None and 'end_time' in all_keys:
+            end_time_col = 'end_time'
+
+    start_ns_list = [
+        _to_nanoseconds(evt.get(start_time_col) if start_time_col else None)
+        for evt in events
+    ]
+    end_ns_list = [
+        _to_nanoseconds(evt.get(end_time_col) if end_time_col else None)
+        for evt in events
+    ]
+
+    _ingest_records_to_otlp(
+        fiddler_client=fiddler_client,
+        records=events,
+        start_ns_list=start_ns_list,
+        end_ns_list=end_ns_list,
+        column_mapping=column_mapping,
+        static_attributes=static_attributes,
+        batch_config=batch_config,
+        index_for_errors=lambda i: i,
+    )
 

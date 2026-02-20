@@ -7,7 +7,7 @@ the same backwards compatibility guarantees as the official SDK.
 """
 
 from typing import List, Dict, Set, Any, Optional
-from uuid import uuid4
+from uuid import uuid4, UUID
 import logging
 import json
 
@@ -23,6 +23,17 @@ from .base import BaseAssetManager, AssetType
 from ..exceptions import AssetNotFoundError, AssetImportError
 
 logger = logging.getLogger(__name__)
+
+
+def _is_uuid(value: Any) -> bool:
+    """Return True if value is a string that parses as a valid UUID."""
+    if not isinstance(value, str):
+        return False
+    try:
+        UUID(value)
+        return True
+    except (ValueError, TypeError, AttributeError):
+        return False
 
 
 class ChartManager(BaseAssetManager[Dict]):
@@ -493,36 +504,96 @@ class ChartManager(BaseAssetManager[Dict]):
 
         enriched = copy.deepcopy(chart)
         data_source = enriched.get('data_source', {})
-        queries = data_source.get('queries', [])
+        query_type = data_source.get('query_type')
 
-        for query in queries:
-            # Enrich segment reference with name
-            if 'segment' in query and query['segment']:
-                segment_ref = query['segment']
-                if isinstance(segment_ref, dict) and 'id' in segment_ref:
-                    segment_id = segment_ref['id']
-                    try:
-                        segment = fdl.Segment.get(id_=segment_id)
-                        query['segment_name'] = segment.name
-                        logger.debug(
-                            f"Enriched segment ID {segment_id} with name '{segment.name}'"
-                        )
-                    except Exception as e:
-                        logger.debug(f"Could not enrich segment {segment_id}: {e}")
-
-            # Enrich custom metric reference with name
-            if query.get('metric_type') == 'custom' and 'metric' in query:
-                metric_id = query['metric']
+        if query_type == 'ANALYTICS':
+            # Enrich segment (data_source.segment)
+            segment_ref = data_source.get('segment')
+            if segment_ref and isinstance(segment_ref, dict) and segment_ref.get('id'):
                 try:
-                    metric = fdl.CustomMetric.get(id_=metric_id)
-                    query['metric_name'] = metric.name
+                    segment = fdl.Segment.get(id_=segment_ref['id'])
+                    data_source['segment_name'] = segment.name
                     logger.debug(
-                        f"Enriched custom metric ID {metric_id} with name '{metric.name}'"
+                        f"Enriched ANALYTICS segment ID {segment_ref['id']} with name '{segment.name}'"
                     )
                 except Exception as e:
-                    logger.debug(f"Could not enrich custom metric {metric_id}: {e}")
+                    logger.debug(f"Could not enrich segment {segment_ref.get('id')}: {e}")
+
+            # Enrich payload.metrics: baseline_name and metric_name (for custom metrics)
+            payload = data_source.get('payload', {})
+            for metric in payload.get('metrics', []):
+                if metric.get('baseline_id'):
+                    try:
+                        baseline = fdl.Baseline.get(id_=metric['baseline_id'])
+                        metric['baseline_name'] = baseline.name
+                        logger.debug(
+                            f"Enriched baseline ID {metric['baseline_id']} with name '{baseline.name}'"
+                        )
+                    except Exception as e:
+                        logger.debug(f"Could not enrich baseline {metric.get('baseline_id')}: {e}")
+
+                metric_id = metric.get('id')
+                if metric_id is not None and _is_uuid(metric_id):
+                    try:
+                        custom_metric = fdl.CustomMetric.get(id_=metric_id)
+                        metric['metric_name'] = custom_metric.name
+                        logger.debug(
+                            f"Enriched custom metric ID {metric_id} with name '{custom_metric.name}'"
+                        )
+                    except Exception as e:
+                        logger.debug(f"Could not enrich custom metric {metric_id}: {e}")
+
+        else:
+            # MONITORING: enrich each query
+            queries = data_source.get('queries', [])
+
+            for query in queries:
+                # Enrich segment reference with name
+                if 'segment' in query and query['segment']:
+                    segment_ref = query['segment']
+                    if isinstance(segment_ref, dict) and 'id' in segment_ref:
+                        segment_id = segment_ref['id']
+                        try:
+                            segment = fdl.Segment.get(id_=segment_id)
+                            query['segment_name'] = segment.name
+                            logger.debug(
+                                f"Enriched segment ID {segment_id} with name '{segment.name}'"
+                            )
+                        except Exception as e:
+                            logger.debug(f"Could not enrich segment {segment_id}: {e}")
+
+                # Enrich custom metric reference with name
+                if query.get('metric_type') == 'custom' and 'metric' in query:
+                    metric_id = query['metric']
+                    try:
+                        metric = fdl.CustomMetric.get(id_=metric_id)
+                        query['metric_name'] = metric.name
+                        logger.debug(
+                            f"Enriched custom metric ID {metric_id} with name '{metric.name}'"
+                        )
+                    except Exception as e:
+                        logger.debug(f"Could not enrich custom metric {metric_id}: {e}")
 
         return enriched
+
+    def _process_analytics_chart(self, chart: Dict) -> Dict:
+        """Process an analytics chart payload to make it compatible for import."""
+
+        if chart.get('query_type') != 'ANALYTICS':
+            return chart
+
+        if 'data_source' in chart and 'segment' in chart['data_source']:
+            segment = chart['data_source']['segment']
+            if isinstance(segment, dict):
+                if 'id' in segment and 'definition' in segment:
+                    if segment['id'] is None:
+                        del segment['id']
+                    elif segment['definition'] is None:
+                        del segment['definition']
+        
+        return chart
+
+        
 
     def import_charts(
         self,
@@ -570,6 +641,8 @@ class ChartManager(BaseAssetManager[Dict]):
         target_model = fdl.Model.get(id_=target_model_id)
         target_project = fdl.Project.get(id_=target_project_id)
 
+        imported_charts = []
+
         for chart in charts:
             chart_title = chart.get('title', 'Untitled')
 
@@ -607,6 +680,70 @@ class ChartManager(BaseAssetManager[Dict]):
                             'Dataset ID resolution not yet implemented. Removing reference.'
                         )
                         del data_source['env_id']
+
+                    # Resolve segment (data_source.segment)
+                    if data_source.get('segment') and data_source.get('segment_name'):
+                        try:
+                            segment = fdl.Segment.from_name(
+                                name=data_source['segment_name'],
+                                model_id=target_model_id,
+                            )
+                            data_source['segment'] = {'id': segment.id}
+                            del data_source['segment_name']
+                        except Exception as e:
+                            logger.warning(
+                                f"Could not resolve segment '{data_source['segment_name']}': {e}"
+                            )
+                    elif data_source.get('segment'):
+                        logger.warning(
+                            f"Chart '{chart_title}': Segment has no name field. "
+                            "Cross-instance import may fail."
+                        )
+
+                    # Resolve baselines and custom metrics in payload.metrics
+                    payload = data_source.get('payload', {})
+                    for metric in payload.get('metrics', []):
+                        # Resolve baseline_id by baseline_name (enriched)
+                        if metric.get('baseline_id'):
+                            if metric.get('baseline_name'):
+                                try:
+                                    baseline = fdl.Baseline.from_name(
+                                        name=metric['baseline_name'],
+                                        model_id=target_model_id,
+                                    )
+                                    metric['baseline_id'] = baseline.id
+                                    del metric['baseline_name']
+                                except Exception as e:
+                                    logger.warning(
+                                        f"Could not resolve baseline '{metric.get('baseline_name')}': {e}"
+                                    )
+                            else:
+                                logger.warning(
+                                    f"Chart '{chart_title}': Metric has baseline_id but no baseline_name. "
+                                    "Cross-instance import may fail."
+                                )
+
+                        # Resolve custom metric by metric_name (id is UUID => custom metric)
+                        metric_id = metric.get('id')
+                        if metric_id is not None and _is_uuid(metric_id):
+                            metric_name = metric.get('metric_name')
+                            if not metric_name:
+                                logger.warning(
+                                    f"Chart '{chart_title}': Custom metric has no metric_name. "
+                                    "Cross-instance import may fail."
+                                )
+                                metric_name = metric_id
+                            try:
+                                custom_metric = fdl.CustomMetric.from_name(
+                                    name=metric_name, model_id=target_model_id
+                                )
+                                metric['id'] = custom_metric.id
+                                if 'metric_name' in metric:
+                                    del metric['metric_name']
+                            except Exception as e:
+                                logger.warning(
+                                    f"Could not resolve custom metric '{metric_name}': {e}"
+                                )
 
                 elif query_type == 'MONITORING':
                     # Update queries
@@ -715,9 +852,11 @@ class ChartManager(BaseAssetManager[Dict]):
                     result['successful'] += 1
                 else:
                     # Create the chart
-                    client.post(url=charts_url, data=new_chart)
+                    processed_chart = self._process_analytics_chart(new_chart)
+                    response = client.post(url=charts_url, data=processed_chart)
                     logger.info(f'Successfully imported chart: {chart_title}')
                     result['successful'] += 1
+                    imported_charts.append(response.json()['data'])
 
             except Exception as e:
                 logger.error(f"Failed to import chart '{chart_title}': {e}")
@@ -729,7 +868,14 @@ class ChartManager(BaseAssetManager[Dict]):
             f'{result["failed"]} failed'
         )
 
-        return result
+        result_dict = {
+            'successful': result['successful'],
+            'failed': result['failed'],
+            'errors': result['errors'],
+            'imported_charts': imported_charts,
+        }
+
+        return result_dict
 
     def get_chart_by_title(self, project_id: str, title: str) -> Dict:
         """Get a specific chart by title.
