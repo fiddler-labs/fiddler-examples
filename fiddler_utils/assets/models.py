@@ -38,6 +38,7 @@ class UUIDEncoder(json.JSONEncoder):
     Converts UUID objects to strings during JSON serialization.
     This is the standard approach recommended by Python community.
     """
+
     def default(self, obj: Any) -> Any:
         if isinstance(obj, UUID):
             return str(obj)
@@ -50,16 +51,19 @@ class ColumnExportData:
 
     Attributes:
         name: Column name
-        data_type: Fiddler DataType as string (INTEGER, FLOAT, STRING, CATEGORY, BOOLEAN, etc.)
+        data_type: Fiddler DataType as string (INTEGER, FLOAT, STRING, CATEGORY, BOOLEAN, VECTOR, etc.)
         min_value: Minimum value for numeric types
         max_value: Maximum value for numeric types
         categories: List of valid categories for CATEGORY type
+        n_dimensions: Number of dimensions for VECTOR type columns
     """
+
     name: str
     data_type: str
     min_value: Optional[float] = None
     max_value: Optional[float] = None
     categories: Optional[List[str]] = None
+    n_dimensions: Optional[int] = None
 
 
 @dataclass
@@ -86,6 +90,7 @@ class ModelExportData:
         source_model_id: Source model ID (reference only)
         exported_at: Export timestamp
     """
+
     name: str
     version: Optional[str]
     columns: List[ColumnExportData]
@@ -197,6 +202,7 @@ class ModelManager:
         """Lazy load BaselineManager to avoid circular imports."""
         if self.baseline_manager is None:
             from .baselines import BaselineManager
+
             self.baseline_manager = BaselineManager()
         return self.baseline_manager
 
@@ -286,7 +292,9 @@ class ModelManager:
 
         # Get model
         model = fdl.Model.get(id_=model_id)
-        logger.info(f"Retrieved model '{model.name}' (version: {model.version or 'none'})")
+        logger.info(
+            f"Retrieved model '{model.name}' (version: {model.version or 'none'})"
+        )
 
         # Extract schema columns
         columns = self._extract_columns(model)
@@ -294,9 +302,11 @@ class ModelManager:
 
         # Extract spec
         spec_data = self._extract_spec(model.spec)
-        logger.debug(f"Extracted spec: {len(spec_data.get('inputs', []))} inputs, "
-                    f"{len(spec_data.get('outputs', []))} outputs, "
-                    f"{len(spec_data.get('targets', []))} targets")
+        logger.debug(
+            f'Extracted spec: {len(spec_data.get("inputs", []))} inputs, '
+            f'{len(spec_data.get("outputs", []))} outputs, '
+            f'{len(spec_data.get("targets", []))} targets'
+        )
 
         # Extract custom features (LLM enrichments)
         custom_features = self._extract_custom_features(model.spec)
@@ -304,7 +314,9 @@ class ModelManager:
             logger.debug(f'Extracted {len(custom_features)} custom features')
 
         # Extract task configuration
-        task_params = self._extract_task_params(model.task_params) if model.task_params else None
+        task_params = (
+            self._extract_task_params(model.task_params) if model.task_params else None
+        )
 
         # Export baselines
         baselines = []
@@ -316,8 +328,10 @@ class ModelManager:
         # Detect artifacts
         has_artifacts = self._detect_artifacts(model)
         if has_artifacts:
-            logger.warning(f"Model '{model.name}' has uploaded artifacts. "
-                          "Artifacts cannot be exported and must be re-uploaded after import.")
+            logger.warning(
+                f"Model '{model.name}' has uploaded artifacts. "
+                'Artifacts cannot be exported and must be re-uploaded after import.'
+            )
 
         # Export related assets
         related_assets = {}
@@ -338,9 +352,11 @@ class ModelManager:
             baselines=baselines,
             has_artifacts=has_artifacts,
             related_assets=related_assets,
-            source_project_id=str(model.project_id),  # Convert UUID to str (field type is str)
+            source_project_id=str(
+                model.project_id
+            ),  # Convert UUID to str (field type is str)
             source_model_id=str(model.id),  # Convert UUID to str (field type is str)
-            exported_at=datetime.utcnow().isoformat()
+            exported_at=datetime.utcnow().isoformat(),
         )
 
         logger.info(f"Successfully exported model '{model.name}'")
@@ -364,7 +380,8 @@ class ModelManager:
                 data_type=str(col.data_type).replace('DataType.', ''),  # Remove prefix
                 min_value=getattr(col, 'min', None),
                 max_value=getattr(col, 'max', None),
-                categories=getattr(col, 'categories', None)
+                categories=getattr(col, 'categories', None),
+                n_dimensions=getattr(col, 'n_dimensions', None),  # For VECTOR columns
             )
             columns.append(col_data)
 
@@ -384,7 +401,9 @@ class ModelManager:
             'outputs': list(spec.outputs or []),
             'targets': list(spec.targets or []),
             'metadata': list(spec.metadata or []),
-            'decisions': list(spec.decisions or []) if hasattr(spec, 'decisions') and spec.decisions else [],
+            'decisions': list(spec.decisions or [])
+            if hasattr(spec, 'decisions') and spec.decisions
+            else [],
         }
 
     def _extract_custom_features(self, spec: fdl.ModelSpec) -> List[Dict[str, Any]]:
@@ -402,22 +421,30 @@ class ModelManager:
         custom_features_data = []
         for feature in spec.custom_features:
             if isinstance(feature, fdl.TextEmbedding):
-                custom_features_data.append({
-                    'type': 'TextEmbedding',
-                    'name': feature.name,
-                    'source_column': feature.source_column,
-                    'column': feature.column,
-                    'n_tags': getattr(feature, 'n_tags', 10)
-                })
+                custom_features_data.append(
+                    {
+                        'type': 'TextEmbedding',
+                        'name': feature.name,
+                        'source_column': feature.source_column,
+                        'column': feature.column,
+                        'n_tags': getattr(feature, 'n_tags', 10),
+                        # TextEmbedding requires centroids for import without Model.from_data()
+                        'centroids': getattr(feature, 'centroids', None),
+                        'n_clusters': getattr(feature, 'n_clusters', None),
+                        'tf_idf': getattr(feature, 'tf_idf', None),
+                    }
+                )
             elif isinstance(feature, fdl.Enrichment):
-                custom_features_data.append({
-                    'type': 'Enrichment',
-                    'name': feature.name,
-                    'enrichment': feature.enrichment,
-                    'columns': list(feature.columns),
-                    'config': feature.config if hasattr(feature, 'config') else {},
-                    'allow_list': getattr(feature, 'allow_list', None)
-                })
+                custom_features_data.append(
+                    {
+                        'type': 'Enrichment',
+                        'name': feature.name,
+                        'enrichment': feature.enrichment,
+                        'columns': list(feature.columns),
+                        'config': feature.config if hasattr(feature, 'config') else {},
+                        'allow_list': getattr(feature, 'allow_list', None),
+                    }
+                )
             else:
                 logger.warning(f'Unknown custom feature type: {type(feature)}')
 
@@ -434,11 +461,16 @@ class ModelManager:
         """
         params = {}
 
-        if hasattr(task_params, 'target_class_order') and task_params.target_class_order:
+        if (
+            hasattr(task_params, 'target_class_order')
+            and task_params.target_class_order
+        ):
             params['target_class_order'] = list(task_params.target_class_order)
 
         if hasattr(task_params, 'binary_classification_threshold'):
-            params['binary_classification_threshold'] = task_params.binary_classification_threshold
+            params['binary_classification_threshold'] = (
+                task_params.binary_classification_threshold
+            )
 
         return params
 
@@ -452,7 +484,9 @@ class ModelManager:
             True if model has artifacts
         """
         # Check for deployment params or other artifact indicators
-        return hasattr(model, 'deployment_params') and model.deployment_params is not None
+        return (
+            hasattr(model, 'deployment_params') and model.deployment_params is not None
+        )
 
     def _export_related_assets(self, model_id: str) -> Dict[str, List[Dict]]:
         """Export related assets using existing asset managers.
@@ -469,11 +503,12 @@ class ModelManager:
         related: Dict[str, List[Dict]] = {
             'segments': [],
             'custom_metrics': [],
-            'alerts': []
+            'alerts': [],
         }
 
         # Export segments
         from .segments import SegmentManager
+
         segment_mgr = SegmentManager()
         segments = segment_mgr.export_assets(model_id=model_id)
         # Use asdict to serialize AssetExportData, converting enums and sets properly
@@ -481,7 +516,7 @@ class ModelManager:
             {
                 **asdict(s),
                 'asset_type': s.asset_type.name,  # Convert enum to string name
-                'referenced_columns': list(s.referenced_columns)
+                'referenced_columns': list(s.referenced_columns),
             }
             for s in segments
         ]
@@ -489,13 +524,14 @@ class ModelManager:
 
         # Export custom metrics
         from .metrics import CustomMetricManager
+
         metric_mgr = CustomMetricManager()
         metrics = metric_mgr.export_assets(model_id=model_id)
         related['custom_metrics'] = [
             {
                 **asdict(m),
                 'asset_type': m.asset_type.name,  # Convert enum to string name
-                'referenced_columns': list(m.referenced_columns)
+                'referenced_columns': list(m.referenced_columns),
             }
             for m in metrics
         ]
@@ -503,13 +539,14 @@ class ModelManager:
 
         # Export alerts
         from .alerts import AlertManager
+
         alert_mgr = AlertManager()
         alerts = alert_mgr.export_assets(model_id=model_id)
         related['alerts'] = [
             {
                 **asdict(a),
                 'asset_type': a.asset_type.name,  # Convert enum to string name
-                'referenced_columns': list(a.referenced_columns)
+                'referenced_columns': list(a.referenced_columns),
             }
             for a in alerts
         ]
@@ -588,7 +625,11 @@ class ModelManager:
         logger.debug('Reconstructed model spec')
 
         # Reconstruct task params
-        task_params = self._reconstruct_task_params(model_data.task_params) if model_data.task_params else None
+        task_params = (
+            self._reconstruct_task_params(model_data.task_params)
+            if model_data.task_params
+            else None
+        )
 
         # Parse task enum
         task = self._parse_task_enum(model_data.task)
@@ -600,7 +641,13 @@ class ModelManager:
             )
         elif import_mode == 'create_version':
             model = self._import_create_version(
-                target_project_id, model_data, schema, spec, task, task_params, version_label
+                target_project_id,
+                model_data,
+                schema,
+                spec,
+                task,
+                task_params,
+                version_label,
             )
         elif import_mode == 'update_existing':
             model = self._import_update_existing(
@@ -615,19 +662,23 @@ class ModelManager:
 
         # Import related assets
         if import_related_assets and model_data.related_assets:
-            self._import_related_assets(model.id, model_data.related_assets, validate=validate_assets)
+            self._import_related_assets(
+                model.id, model_data.related_assets, validate=validate_assets
+            )
 
         # Warn about artifacts
         if model_data.has_artifacts:
             logger.warning(
-                f"Source model had uploaded artifacts. "
-                f"You must manually re-upload artifacts using: "
+                f'Source model had uploaded artifacts. '
+                f'You must manually re-upload artifacts using: '
                 f"model.add_artifact(model_dir='path/to/package')"
             )
 
         return model
 
-    def _reconstruct_columns(self, columns_data: List[ColumnExportData]) -> List[fdl.Column]:
+    def _reconstruct_columns(
+        self, columns_data: List[ColumnExportData]
+    ) -> List[fdl.Column]:
         """Reconstruct fdl.Column objects from export data.
 
         Args:
@@ -649,7 +700,17 @@ class ModelManager:
                     data_type=data_type,
                     categories=col_data.categories,
                     min=None,
-                    max=None
+                    max=None,
+                )
+            elif data_type == fdl.DataType.VECTOR:
+                # Vector columns require n_dimensions
+                col = fdl.Column(
+                    name=col_data.name,
+                    data_type=data_type,
+                    n_dimensions=col_data.n_dimensions,
+                    min=None,
+                    max=None,
+                    categories=None,
                 )
             else:
                 # Numeric columns require min/max, categories must be None
@@ -658,14 +719,16 @@ class ModelManager:
                     data_type=data_type,
                     min=col_data.min_value,
                     max=col_data.max_value,
-                    categories=None
+                    categories=None,
                 )
 
             columns.append(col)
 
         return columns
 
-    def _reconstruct_custom_features(self, custom_features_data: List[Dict[str, Any]]) -> List:
+    def _reconstruct_custom_features(
+        self, custom_features_data: List[Dict[str, Any]]
+    ) -> List:
         """Reconstruct custom features (LLM enrichments) from export data.
 
         Args:
@@ -677,35 +740,96 @@ class ModelManager:
         if not custom_features_data:
             return []
 
+        # First pass: Build a map of TextEmbedding names to their centroid data
+        # from "Centroid Distance" enrichments (where the Fiddler API stores centroids)
+        centroid_data_by_name: Dict[str, Dict[str, Any]] = {}
+        for feature_data in custom_features_data:
+            if (
+                feature_data.get('type') == 'Enrichment'
+                and feature_data.get('enrichment') == 'centroid_distance'
+            ):
+                config = feature_data.get('config', {})
+                cf_config = config.get('cf', {})
+                if cf_config:
+                    # The cf.name matches the TextEmbedding name
+                    text_embedding_name = cf_config.get('name')
+                    if text_embedding_name:
+                        centroid_data_by_name[text_embedding_name] = {
+                            'centroids': cf_config.get('centroids'),
+                            'n_clusters': cf_config.get('n_clusters'),
+                            'tf_idf': cf_config.get('tf_idf'),
+                        }
+                        logger.debug(
+                            f"Found centroid data for TextEmbedding '{text_embedding_name}'"
+                        )
+
         custom_features = []
 
         for feature_data in custom_features_data:
             feature_type = feature_data['type']
 
             if feature_type == 'TextEmbedding':
-                custom_features.append(fdl.TextEmbedding(
-                    name=feature_data['name'],
-                    source_column=feature_data['source_column'],
-                    column=feature_data['column'],
-                    n_tags=feature_data.get('n_tags', 10)
-                ))
+                text_embedding_kwargs = {
+                    'name': feature_data['name'],
+                    'source_column': feature_data['source_column'],
+                    'column': feature_data['column'],
+                    'n_tags': feature_data.get('n_tags', 10),
+                }
+
+                # First try to get centroid data directly from the TextEmbedding export
+                if feature_data.get('centroids') is not None:
+                    text_embedding_kwargs['centroids'] = feature_data['centroids']
+                if feature_data.get('n_clusters') is not None:
+                    text_embedding_kwargs['n_clusters'] = feature_data['n_clusters']
+                if feature_data.get('tf_idf') is not None:
+                    text_embedding_kwargs['tf_idf'] = feature_data['tf_idf']
+
+                # If centroids not present, look in the centroid_distance enrichments
+                if text_embedding_kwargs.get('centroids') is None:
+                    centroid_info = centroid_data_by_name.get(feature_data['name'])
+                    if centroid_info:
+                        logger.info(
+                            f'Applying centroids from Centroid Distance enrichment '
+                            f"for TextEmbedding '{feature_data['name']}'"
+                        )
+                        if centroid_info.get('centroids') is not None:
+                            text_embedding_kwargs['centroids'] = centroid_info[
+                                'centroids'
+                            ]
+                        if centroid_info.get('n_clusters') is not None:
+                            text_embedding_kwargs['n_clusters'] = centroid_info[
+                                'n_clusters'
+                            ]
+                        if centroid_info.get('tf_idf') is not None:
+                            text_embedding_kwargs['tf_idf'] = centroid_info['tf_idf']
+                    else:
+                        logger.warning(
+                            f"TextEmbedding '{feature_data['name']}' has no centroids. "
+                            f'Model import may fail without centroids.'
+                        )
+
+                custom_features.append(fdl.TextEmbedding(**text_embedding_kwargs))
             elif feature_type == 'Enrichment':
                 enrichment = fdl.Enrichment(
                     name=feature_data['name'],
                     enrichment=feature_data['enrichment'],
                     columns=feature_data['columns'],
-                    config=feature_data.get('config', {})
+                    config=feature_data.get('config', {}),
                 )
                 # Add allow_list if present
                 if feature_data.get('allow_list'):
                     enrichment.allow_list = feature_data['allow_list']
                 custom_features.append(enrichment)
             else:
-                logger.warning(f"Unknown custom feature type '{feature_type}', skipping")
+                logger.warning(
+                    f"Unknown custom feature type '{feature_type}', skipping"
+                )
 
         return custom_features
 
-    def _reconstruct_task_params(self, task_params_data: Dict[str, Any]) -> fdl.ModelTaskParams:
+    def _reconstruct_task_params(
+        self, task_params_data: Dict[str, Any]
+    ) -> fdl.ModelTaskParams:
         """Reconstruct ModelTaskParams from export data.
 
         Args:
@@ -720,7 +844,9 @@ class ModelManager:
             params.target_class_order = task_params_data['target_class_order']
 
         if 'binary_classification_threshold' in task_params_data:
-            params.binary_classification_threshold = task_params_data['binary_classification_threshold']
+            params.binary_classification_threshold = task_params_data[
+                'binary_classification_threshold'
+            ]
 
         return params
 
@@ -775,7 +901,7 @@ class ModelManager:
         schema: fdl.ModelSchema,
         spec: fdl.ModelSpec,
         task: fdl.ModelTask,
-        task_params: Optional[fdl.ModelTaskParams]
+        task_params: Optional[fdl.ModelTaskParams],
     ) -> fdl.Model:
         """Import as new model (fail if name exists).
 
@@ -795,12 +921,14 @@ class ModelManager:
         """
         # Check if model exists
         try:
-            existing = fdl.Model.from_name(name=model_data.name, project_id=target_project_id)
+            existing = fdl.Model.from_name(
+                name=model_data.name, project_id=target_project_id
+            )
             raise ValidationError(
                 f"Model '{model_data.name}' already exists in target project. "
                 f"Use import_mode='create_version' to create a new version, or choose a different name."
             )
-        except:
+        except Exception:
             # Model doesn't exist, proceed
             pass
 
@@ -814,14 +942,14 @@ class ModelManager:
             task_params=task_params,
             event_id_col=model_data.event_id_col,
             event_ts_col=model_data.event_ts_col,
-            version=model_data.version  # Preserve version label if present
+            version=model_data.version,  # Preserve version label if present
         )
 
         try:
             model.create()
             logger.info(f"Created new model '{model.name}'")
         except Exception as e:
-            raise AssetImportError(f"Failed to create model: {str(e)}")
+            raise AssetImportError(f'Failed to create model: {str(e)}')
 
         return model
 
@@ -833,7 +961,7 @@ class ModelManager:
         spec: fdl.ModelSpec,
         task: fdl.ModelTask,
         task_params: Optional[fdl.ModelTaskParams],
-        version_label: Optional[str]
+        version_label: Optional[str],
     ) -> fdl.Model:
         """Import as new version of existing model.
 
@@ -854,7 +982,9 @@ class ModelManager:
         """
         # Get existing model (without version to get base model)
         try:
-            existing_model = fdl.Model.from_name(name=model_data.name, project_id=target_project_id)
+            existing_model = fdl.Model.from_name(
+                name=model_data.name, project_id=target_project_id
+            )
         except Exception as e:
             raise AssetImportError(
                 f"Cannot create version: base model '{model_data.name}' not found in target project. "
@@ -871,9 +1001,11 @@ class ModelManager:
             new_version.event_id_col = model_data.event_id_col
             new_version.event_ts_col = model_data.event_ts_col
             new_version.create()
-            logger.info(f"Created new version '{version_label}' of model '{model_data.name}'")
+            logger.info(
+                f"Created new version '{version_label}' of model '{model_data.name}'"
+            )
         except Exception as e:
-            raise AssetImportError(f"Failed to create model version: {str(e)}")
+            raise AssetImportError(f'Failed to create model version: {str(e)}')
 
         return new_version
 
@@ -884,7 +1016,7 @@ class ModelManager:
         schema: fdl.ModelSchema,
         spec: fdl.ModelSpec,
         task: fdl.ModelTask,
-        task_params: Optional[fdl.ModelTaskParams]
+        task_params: Optional[fdl.ModelTaskParams],
     ) -> fdl.Model:
         """Import by updating existing model (dangerous).
 
@@ -907,7 +1039,7 @@ class ModelManager:
             existing_model = fdl.Model.from_name(
                 name=model_data.name,
                 project_id=target_project_id,
-                version=model_data.version
+                version=model_data.version,
             )
         except Exception as e:
             raise AssetImportError(
@@ -930,11 +1062,13 @@ class ModelManager:
             existing_model.update()
             logger.info(f"Updated existing model '{model_data.name}'")
         except Exception as e:
-            raise AssetImportError(f"Failed to update model: {str(e)}")
+            raise AssetImportError(f'Failed to update model: {str(e)}')
 
         return existing_model
 
-    def _import_baselines(self, target_model_id: str, baselines_data: List[Dict[str, Any]]) -> None:
+    def _import_baselines(
+        self, target_model_id: str, baselines_data: List[Dict[str, Any]]
+    ) -> None:
         """Import baselines to target model.
 
         Args:
@@ -944,7 +1078,7 @@ class ModelManager:
         if not baselines_data:
             return
 
-        print(f"\nImporting {len(baselines_data)} baselines...")
+        print(f'\nImporting {len(baselines_data)} baselines...')
         baseline_mgr = self._get_baseline_manager()
         success_count = 0
         skip_count = 0
@@ -954,22 +1088,28 @@ class ModelManager:
             try:
                 result = baseline_mgr.import_baseline(target_model_id, baseline_data)
                 if result is None:
-                    print(f"  ⊗ Skipped: {baseline_data['name']} ({baseline_data['type']})")
+                    print(
+                        f'  ⊗ Skipped: {baseline_data["name"]} ({baseline_data["type"]})'
+                    )
                     skip_count += 1
                 else:
-                    print(f"  ✓ Created: {baseline_data['name']} ({baseline_data['type']})")
+                    print(
+                        f'  ✓ Created: {baseline_data["name"]} ({baseline_data["type"]})'
+                    )
                     success_count += 1
             except Exception as e:
-                print(f"  ✗ Failed: {baseline_data['name']} - {str(e)}")
+                print(f'  ✗ Failed: {baseline_data["name"]} - {str(e)}')
                 fail_count += 1
 
-        print(f"  Summary: {success_count} created, {skip_count} skipped, {fail_count} failed")
+        print(
+            f'  Summary: {success_count} created, {skip_count} skipped, {fail_count} failed'
+        )
 
     def _import_related_assets(
         self,
         target_model_id: str,
         related_assets: Dict[str, List[Dict]],
-        validate: bool = True
+        validate: bool = True,
     ) -> None:
         """Import related assets using existing asset managers.
 
@@ -984,25 +1124,34 @@ class ModelManager:
         from .base import AssetExportData, AssetType
 
         if validate:
-            logger.info("[ModelManager] Asset validation enabled: will check column references")
+            logger.info(
+                '[ModelManager] Asset validation enabled: will check column references'
+            )
         else:
-            logger.warning("[ModelManager] Asset validation disabled: skipping column reference checks")
+            logger.warning(
+                '[ModelManager] Asset validation disabled: skipping column reference checks'
+            )
 
         # Import segments
         if related_assets.get('segments'):
-            validation_status = "with validation" if validate else "without validation"
-            print(f"\nImporting {len(related_assets['segments'])} segments ({validation_status})...")
+            validation_status = 'with validation' if validate else 'without validation'
+            print(
+                f'\nImporting {len(related_assets["segments"])} segments ({validation_status})...'
+            )
             try:
                 from .segments import SegmentManager
+
                 segment_mgr = SegmentManager()
 
                 # Reconstruct AssetExportData from dict (asdict was used during export)
                 segment_assets = [
                     AssetExportData(
-                        asset_type=AssetType[s['asset_type']] if isinstance(s['asset_type'], str) else s['asset_type'],
+                        asset_type=AssetType[s['asset_type']]
+                        if isinstance(s['asset_type'], str)
+                        else s['asset_type'],
                         name=s['name'],
                         data=s['data'],
-                        referenced_columns=set(s.get('referenced_columns', []))
+                        referenced_columns=set(s.get('referenced_columns', [])),
                     )
                     for s in related_assets['segments']
                 ]
@@ -1011,30 +1160,37 @@ class ModelManager:
                     target_model_id=target_model_id,
                     assets=segment_assets,
                     validate=validate,
-                    dry_run=False
+                    dry_run=False,
                 )
-                print(f"  ✓ Created: {result.successful}, Skipped: {result.skipped}, Failed: {result.failed}")
+                print(
+                    f'  ✓ Created: {result.successful}, Skipped: {result.skipped}, Failed: {result.failed}'
+                )
                 if result.failed > 0:
                     for error in result.errors[:3]:  # Show first 3 errors
-                        print(f"    Error: {error}")
+                        print(f'    Error: {error}')
             except Exception as e:
-                print(f"  ✗ Failed to import segments: {str(e)}")
+                print(f'  ✗ Failed to import segments: {str(e)}')
                 logger.warning(f'Failed to import segments: {e}')
 
         # Import custom metrics
         if related_assets.get('custom_metrics'):
-            validation_status = "with validation" if validate else "without validation"
-            print(f"\nImporting {len(related_assets['custom_metrics'])} custom metrics ({validation_status})...")
+            validation_status = 'with validation' if validate else 'without validation'
+            print(
+                f'\nImporting {len(related_assets["custom_metrics"])} custom metrics ({validation_status})...'
+            )
             try:
                 from .metrics import CustomMetricManager
+
                 metric_mgr = CustomMetricManager()
 
                 metric_assets = [
                     AssetExportData(
-                        asset_type=AssetType[m['asset_type']] if isinstance(m['asset_type'], str) else m['asset_type'],
+                        asset_type=AssetType[m['asset_type']]
+                        if isinstance(m['asset_type'], str)
+                        else m['asset_type'],
                         name=m['name'],
                         data=m['data'],
-                        referenced_columns=set(m.get('referenced_columns', []))
+                        referenced_columns=set(m.get('referenced_columns', [])),
                     )
                     for m in related_assets['custom_metrics']
                 ]
@@ -1043,28 +1199,33 @@ class ModelManager:
                     target_model_id=target_model_id,
                     assets=metric_assets,
                     validate=validate,
-                    dry_run=False
+                    dry_run=False,
                 )
-                print(f"  ✓ Created: {result.successful}, Skipped: {result.skipped}, Failed: {result.failed}")
+                print(
+                    f'  ✓ Created: {result.successful}, Skipped: {result.skipped}, Failed: {result.failed}'
+                )
                 if result.failed > 0:
                     for error in result.errors[:3]:  # Show first 3 errors
-                        print(f"    Error: {error}")
+                        print(f'    Error: {error}')
             except Exception as e:
-                print(f"  ✗ Failed to import custom metrics: {str(e)}")
+                print(f'  ✗ Failed to import custom metrics: {str(e)}')
                 logger.warning(f'Failed to import custom metrics: {e}')
 
         # Import alerts
         if related_assets.get('alerts'):
-            print(f"\nImporting {len(related_assets['alerts'])} alerts...")
-            print(f"  ⚠️  Alert import is not yet supported - metric IDs require manual mapping")
-            print(f"  📋 Exported alert definitions are saved in the export data for reference")
-            logger.info(f"Skipped {len(related_assets['alerts'])} alerts (not yet supported)")
+            print(f'\nImporting {len(related_assets["alerts"])} alerts...')
+            print(
+                f'  ⚠️  Alert import is not yet supported - metric IDs require manual mapping'
+            )
+            print(
+                f'  📋 Exported alert definitions are saved in the export data for reference'
+            )
+            logger.info(
+                f'Skipped {len(related_assets["alerts"])} alerts (not yet supported)'
+            )
 
     def display_model_info(
-        self,
-        model_id: str,
-        show_columns: bool = True,
-        show_related_assets: bool = True
+        self, model_id: str, show_columns: bool = True, show_related_assets: bool = True
     ):
         """Display comprehensive model information.
 
@@ -1085,60 +1246,65 @@ class ModelManager:
         """
         model = fdl.Model.get(id_=model_id)
 
-        print(f"\n{'='*60}")
-        print(f"Model: {model.name}")
-        print(f"{'='*60}")
+        print(f'\n{"=" * 60}')
+        print(f'Model: {model.name}')
+        print(f'{"=" * 60}')
 
         if model.version:
-            print(f"Version: {model.version}")
+            print(f'Version: {model.version}')
 
-        print(f"Task: {model.task}")
-        print(f"Project ID: {model.project_id}")
-        print(f"Model ID: {model.id}")
+        print(f'Task: {model.task}')
+        print(f'Project ID: {model.project_id}')
+        print(f'Model ID: {model.id}')
 
         # Get default dashboard UUID
         try:
             dashboard_uuid = self.get_default_dashboard_uuid(model.id)
             if dashboard_uuid:
-                print(f"Default Dashboard UUID: {dashboard_uuid}")
+                print(f'Default Dashboard UUID: {dashboard_uuid}')
         except Exception as e:
-            logger.debug(f"Could not retrieve default dashboard UUID: {e}")
+            logger.debug(f'Could not retrieve default dashboard UUID: {e}')
 
         # Event columns
         if model.event_id_col or model.event_ts_col:
-            print(f"\nEvent Columns:")
+            print(f'\nEvent Columns:')
             if model.event_id_col:
-                print(f"  ID Column: {model.event_id_col}")
+                print(f'  ID Column: {model.event_id_col}')
             if model.event_ts_col:
-                print(f"  Timestamp Column: {model.event_ts_col}")
+                print(f'  Timestamp Column: {model.event_ts_col}')
 
         # Task parameters
         if model.task_params:
-            print(f"\nTask Parameters:")
-            if hasattr(model.task_params, 'target_class_order') and model.task_params.target_class_order:
-                print(f"  Target Class Order: {model.task_params.target_class_order}")
+            print(f'\nTask Parameters:')
+            if (
+                hasattr(model.task_params, 'target_class_order')
+                and model.task_params.target_class_order
+            ):
+                print(f'  Target Class Order: {model.task_params.target_class_order}')
             if hasattr(model.task_params, 'binary_classification_threshold'):
-                print(f"  Binary Threshold: {model.task_params.binary_classification_threshold}")
+                print(
+                    f'  Binary Threshold: {model.task_params.binary_classification_threshold}'
+                )
 
         # Schema summary
         schema_columns = getattr(model.schema, 'columns', [])
-        print(f"\nSchema: {len(schema_columns)} columns")
-        print(f"  Inputs: {len(model.spec.inputs or [])}")
-        print(f"  Outputs: {len(model.spec.outputs or [])}")
-        print(f"  Targets: {len(model.spec.targets or [])}")
-        print(f"  Metadata: {len(model.spec.metadata or [])}")
+        print(f'\nSchema: {len(schema_columns)} columns')
+        print(f'  Inputs: {len(model.spec.inputs or [])}')
+        print(f'  Outputs: {len(model.spec.outputs or [])}')
+        print(f'  Targets: {len(model.spec.targets or [])}')
+        print(f'  Metadata: {len(model.spec.metadata or [])}')
 
         if model.spec.decisions:
-            print(f"  Decisions: {len(model.spec.decisions)}")
+            print(f'  Decisions: {len(model.spec.decisions)}')
 
         if hasattr(model.spec, 'custom_features') and model.spec.custom_features:
-            print(f"  Custom Features: {len(model.spec.custom_features)}")
+            print(f'  Custom Features: {len(model.spec.custom_features)}')
 
         # Detailed column information
         if show_columns:
-            print(f"\n{'-'*60}")
-            print(f"Columns:")
-            print(f"{'-'*60}")
+            print(f'\n{"-" * 60}')
+            print(f'Columns:')
+            print(f'{"-" * 60}')
 
             # Print column details using SchemaValidator utility
             from ..schema import SchemaValidator
@@ -1149,65 +1315,65 @@ class ModelManager:
                 role = role_enum.value.upper() if role_enum else 'UNKNOWN'
                 data_type = str(col.data_type).replace('DataType.', '')
 
-                info_parts = [f"{col.name:<30}", f"{role:<10}", f"{data_type:<12}"]
+                info_parts = [f'{col.name:<30}', f'{role:<10}', f'{data_type:<12}']
 
                 # Add range/categories info
                 if hasattr(col, 'min') and col.min is not None:
-                    info_parts.append(f"min={col.min}")
+                    info_parts.append(f'min={col.min}')
                 if hasattr(col, 'max') and col.max is not None:
-                    info_parts.append(f"max={col.max}")
+                    info_parts.append(f'max={col.max}')
                 if hasattr(col, 'categories') and col.categories:
                     cat_preview = str(col.categories[:3])[:-1]
                     if len(col.categories) > 3:
-                        cat_preview += f", ... ({len(col.categories)} total)]"
+                        cat_preview += f', ... ({len(col.categories)} total)]'
                     else:
-                        cat_preview += "]"
-                    info_parts.append(f"categories={cat_preview}")
+                        cat_preview += ']'
+                    info_parts.append(f'categories={cat_preview}')
 
-                print("  " + "  ".join(info_parts))
+                print('  ' + '  '.join(info_parts))
 
         # Artifacts warning
         if self._detect_artifacts(model):
-            print(f"\n{'!'*60}")
-            print(f"⚠  Model has uploaded artifacts (model package)")
-            print(f"{'!'*60}")
+            print(f'\n{"!" * 60}')
+            print(f'⚠  Model has uploaded artifacts (model package)')
+            print(f'{"!" * 60}')
 
         # Related assets counts
         if show_related_assets:
-            print(f"\n{'-'*60}")
-            print(f"Related Assets:")
-            print(f"{'-'*60}")
+            print(f'\n{"-" * 60}')
+            print(f'Related Assets:')
+            print(f'{"-" * 60}')
 
             # Count baselines
             try:
                 baseline_mgr = self._get_baseline_manager()
                 baselines = baseline_mgr.list_baselines(model_id)
-                print(f"  Baselines: {len(baselines)}")
+                print(f'  Baselines: {len(baselines)}')
             except Exception as e:
-                print(f"  Baselines: Unable to count ({str(e)[:50]})")
+                print(f'  Baselines: Unable to count ({str(e)[:50]})')
 
             # Count segments
             try:
                 segments = list(fdl.Segment.list(model_id=model_id))
-                print(f"  Segments: {len(segments)}")
+                print(f'  Segments: {len(segments)}')
             except Exception as e:
-                print(f"  Segments: Unable to count")
+                print(f'  Segments: Unable to count')
 
             # Count custom metrics
             try:
                 metrics = list(fdl.CustomMetric.list(model_id=model_id))
-                print(f"  Custom Metrics: {len(metrics)}")
+                print(f'  Custom Metrics: {len(metrics)}')
             except Exception as e:
-                print(f"  Custom Metrics: Unable to count")
+                print(f'  Custom Metrics: Unable to count')
 
             # Count alerts
             try:
                 alerts = list(fdl.AlertRule.list(model_id=model_id))
-                print(f"  Alerts: {len(alerts)}")
+                print(f'  Alerts: {len(alerts)}')
             except Exception as e:
-                print(f"  Alerts: Unable to count")
+                print(f'  Alerts: Unable to count')
 
-        print(f"{'='*60}\n")
+        print(f'{"=" * 60}\n')
 
     def get_default_dashboard_uuid(self, model_id: str) -> Optional[str]:
         """Get the default dashboard UUID for a model.
@@ -1254,13 +1420,16 @@ class ModelManager:
 
             if response.get('kind') == 'NORMAL' and 'data' in response:
                 dashboard_uuid = response['data'].get('dashboard_uuid')
-                logger.debug(f'Retrieved default dashboard UUID for model {model_id}: {dashboard_uuid}')
+                logger.debug(
+                    f'Retrieved default dashboard UUID for model {model_id}: {dashboard_uuid}'
+                )
                 return dashboard_uuid
             else:
-                logger.warning(f'Unexpected response format from default-dashboard endpoint: {response}')
+                logger.warning(
+                    f'Unexpected response format from default-dashboard endpoint: {response}'
+                )
                 return None
 
         except Exception as e:
             logger.error(f'Failed to get default dashboard for model {model_id}: {e}')
             raise FiddlerUtilsError(f'Failed to get default dashboard: {str(e)}')
-
