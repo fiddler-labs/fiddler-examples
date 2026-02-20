@@ -435,22 +435,27 @@ def log_pandas_traces(
     if end_time_col is None and 'end_time' in df.columns:
         end_time_col = 'end_time'
 
-    # Vectorize timestamp conversion and build records
+    # Timestamp conversion (per-element for robustness with mixed types/timezones)
     now_ns = int(pd.Timestamp.now().timestamp() * 1e9)
     n = len(df)
-    if start_time_col and start_time_col in df.columns:
-        start_dt = pd.to_datetime(df[start_time_col], errors='coerce')
-        start_ns_arr = start_dt.astype('int64').mask(start_dt.isna(), now_ns)
-    else:
-        start_ns_arr = pd.Series([now_ns] * n)
-    if end_time_col and end_time_col in df.columns:
-        end_dt = pd.to_datetime(df[end_time_col], errors='coerce')
-        end_ns_arr = end_dt.astype('int64').mask(end_dt.isna(), now_ns)
-    else:
-        end_ns_arr = pd.Series([now_ns] * n)
     records = df.to_dict('records')
-    start_ns_list = [int(start_ns_arr.iloc[i]) for i in range(n)]
-    end_ns_list = [int(end_ns_arr.iloc[i]) for i in range(n)]
+    if start_time_col and start_time_col in df.columns:
+        start_ns_list = [
+            _to_nanoseconds(rec.get(start_time_col))
+            for rec in records
+        ]
+    else:
+        start_ns_list = [now_ns] * n
+    if end_time_col and end_time_col in df.columns:
+        end_ns_list = []
+        for rec, start_ns in zip(records, start_ns_list):
+            end_val = rec.get(end_time_col)
+            if end_val is None or pd.isna(end_val):
+                end_ns_list.append(start_ns)
+            else:
+                end_ns_list.append(_to_nanoseconds(end_val))
+    else:
+        end_ns_list = start_ns_list
 
     _ingest_records_to_otlp(
         fiddler_client=fiddler_client,
@@ -551,10 +556,13 @@ def log_event_traces(
         _to_nanoseconds(evt.get(start_time_col) if start_time_col else None)
         for evt in events
     ]
-    end_ns_list = [
-        _to_nanoseconds(evt.get(end_time_col) if end_time_col else None)
-        for evt in events
-    ]
+    end_ns_list = []
+    for evt, start_ns in zip(events, start_ns_list):
+        end_val = evt.get(end_time_col) if end_time_col else None
+        if end_time_col is None or end_val is None or pd.isna(end_val):
+            end_ns_list.append(start_ns)
+        else:
+            end_ns_list.append(_to_nanoseconds(end_val))
 
     _ingest_records_to_otlp(
         fiddler_client=fiddler_client,
