@@ -190,6 +190,7 @@ def _ingest_records_to_otlp(
     static_attributes: Dict[str, Any],
     batch_config: BatchConfig,
     index_for_errors: Optional[Callable[[int], Any]] = None,
+    span_name: str = 'span',
 ) -> None:
     """Internal: send a list of record dicts to Fiddler via OTLP.
     
@@ -254,7 +255,7 @@ def _ingest_records_to_otlp(
         end_ns = end_ns_list[i]
         try:
             span = tracer.start_span(
-                name='span',
+                name=span_name,
                 start_time=start_ns,
                 kind=trace.SpanKind.CLIENT,
             )
@@ -312,6 +313,7 @@ def log_pandas_traces(
     column_mapping: Optional[Dict[str, str]] = None,
     static_attributes: Optional[Dict[str, Any]] = None,
     batch_config: Optional[BatchConfig] = None,
+    span_name: str = 'span',
 ) -> None:
     """Ingest a pandas DataFrame into Fiddler via OpenTelemetry (OTLP).
     
@@ -342,6 +344,7 @@ def log_pandas_traces(
         batch_config: Optional BatchConfig object to configure batch processing.
                     If None, uses BatchConfig.default() with safe defaults for
                     Python 3.10-3.12 SSL compatibility.
+        span_name: Optional name for the OpenTelemetry span. Default: 'span'.
     
     Raises:
         ValueError: If URL or token cannot be extracted from fiddler_client
@@ -458,6 +461,7 @@ def log_pandas_traces(
         static_attributes=static_attributes,
         batch_config=batch_config,
         index_for_errors=lambda i: df.index[i],
+        span_name=span_name,
     )
 
 
@@ -467,6 +471,7 @@ def log_event_traces(
     column_mapping: Optional[Dict[str, str]] = None,
     static_attributes: Optional[Dict[str, Any]] = None,
     batch_config: Optional[BatchConfig] = None,
+    span_name: str = 'span',
 ) -> None:
     """Ingest a list of event dicts into Fiddler via OpenTelemetry (OTLP).
 
@@ -483,6 +488,7 @@ def log_event_traces(
         static_attributes: Optional attributes applied to every span. Same as
                           in log_pandas_traces.
         batch_config: Optional BatchConfig. If None, uses BatchConfig.default().
+        span_name: Optional name for the OpenTelemetry span. Default: 'span'.
 
     Raises:
         ValueError: If URL or token cannot be extracted from fiddler_client.
@@ -559,5 +565,6 @@ def log_event_traces(
         static_attributes=static_attributes,
         batch_config=batch_config,
         index_for_errors=lambda i: i,
+        span_name=span_name,
     )
 
