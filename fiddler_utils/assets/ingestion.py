@@ -304,7 +304,7 @@ def _ingest_records_to_otlp(
             f'First error: {errors[0][1] if errors else "Unknown error"}'
         )
     if failed_rows == 0 and successful_rows > 0:
-        print(f'✅ Successfully ingested all {successful_rows} rows to Fiddler!')
+        print(f'✅ Successfully ingested {successful_rows} rows')
 
 
 def log_pandas_traces(
