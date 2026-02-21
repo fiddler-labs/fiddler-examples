@@ -47,6 +47,7 @@ import logging
 import time
 import random
 import string
+import requests
 
 try:
     import fiddler as fdl
@@ -519,3 +520,112 @@ def cleanup_orphaned_test_metrics(model_id: str, prefix: str = "__test_") -> int
     logger.info(f"Cleanup complete: deleted {deleted_count}/{len(orphaned)} metrics")
 
     return deleted_count
+
+def query_custom_metric(
+    metric: fdl.CustomMetric,
+    model: fdl.Model,
+    url: str,
+    token: str,
+    start_time: str = "",
+    end_time: str = "",
+    baseline_name: str = "PRODUCTION",
+) -> Optional[Dict[str, Any]]:
+    """Query a custom metric from Fiddler API for a specific time range or baseline.
+    
+    Args:
+        metric: The custom metric object (must have .id and .name attributes)
+        model: The model object (must have .id attribute)
+        url: Base URL for Fiddler API (e.g., "https://<name>.fiddler.ai")
+        token: API authentication token
+        start_time: Start time in format "YYYY-MM-DD HH:MM:SS" (required for PRODUCTION)
+        end_time: End time in format "YYYY-MM-DD HH:MM:SS" (required for PRODUCTION)
+        baseline_name: Name of the baseline dataset to query, or "PRODUCTION" for time range
+                      (default: "PRODUCTION")
+    
+    Returns:
+        Dictionary containing the metric data, or None if the query failed or returned no data
+    
+    Raises:
+        None: All errors are logged and None is returned
+    
+    Example:
+        ```python
+        # Query production data for a time range
+        result = query_custom_metric(
+            metric=my_metric,
+            model=model,
+            url="https://myorg.fiddler.ai",
+            token=api_token,
+            start_time="2025-01-01 00:00:00",
+            end_time="2025-01-31 23:59:59"
+        )
+        
+        # Query a baseline dataset
+        result = query_custom_metric(
+            metric=my_metric,
+            model=model,
+            url="https://myorg.fiddler.ai",
+            token=api_token,
+            baseline_name="baseline_v1"
+        )
+        ```
+    """
+    json_request = {
+        "model_id": str(model.id),
+        "env_type": "PRODUCTION",
+        "metrics": [
+            {
+                "id": str(metric.id)
+            }
+        ],
+    }
+
+    # Handle baseline dataset vs production time range
+    if baseline_name != "PRODUCTION":
+        try:
+            dataset = fdl.Dataset.from_name(name=baseline_name, model_id=model.id)
+            json_request["env_id"] = str(dataset.id)
+        except Exception as e:
+            logger.error(f"Failed to get dataset '{baseline_name}': {e}")
+            return None
+    else:
+        # For PRODUCTION, time range is required
+        if not start_time or not end_time:
+            logger.error(
+                "Start time and end time are required when querying PRODUCTION dataset. "
+                f"Got start_time='{start_time}', end_time='{end_time}'"
+            )
+            return None
+        json_request["time_range"] = {
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {token}',
+    }
+
+    response = requests.post(
+        f'{url}/v3/analytics/metrics',
+        headers=headers,
+        json=json_request
+    )
+
+    if not response or response.status_code != 200:
+        logger.error(
+            f"Failed to query metric '{metric.name}'. "
+            f"Status code: {response.status_code if response else 'N/A'}"
+        )
+        if response:
+            logger.debug(f"Response: {response.text}")
+        return None
+
+    result_data = response.json().get('data', [])
+
+    if not result_data:
+        logger.error(f"No data returned for metric '{metric.name}'")
+        return None
+
+    return result_data[0]
+
