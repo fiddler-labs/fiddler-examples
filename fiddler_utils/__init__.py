@@ -104,6 +104,18 @@ from .comparison import (
     ValueDifference,
 )
 
+# Import public API - Bulk alert creation
+from .bulk_alerts import BulkAlertCreator, ModelScopeFilter, BulkAlertResult
+from .alert_profiles import (
+    AlertProfile,
+    AlertSpec,
+    ThresholdConfig,
+    ThresholdStrategy,
+    NotificationConfig,
+    get_default_ml_profile,
+    get_traffic_only_profile,
+)
+
 # Import public API - Exceptions
 from .exceptions import (
     FiddlerUtilsError,
@@ -114,6 +126,7 @@ from .exceptions import (
     AssetNotFoundError,
     AssetImportError,
     BulkOperationError,
+    BulkAlertCreationError,
 )
 
 # Define public API
@@ -169,6 +182,17 @@ __all__ = [
     'SpecComparison',
     'AssetComparison',
     'ValueDifference',
+    # Bulk alert creation
+    'BulkAlertCreator',
+    'ModelScopeFilter',
+    'BulkAlertResult',
+    'AlertProfile',
+    'AlertSpec',
+    'ThresholdConfig',
+    'ThresholdStrategy',
+    'NotificationConfig',
+    'get_default_ml_profile',
+    'get_traffic_only_profile',
     # Exceptions
     'FiddlerUtilsError',
     'ConnectionError',
@@ -178,6 +202,7 @@ __all__ = [
     'AssetNotFoundError',
     'AssetImportError',
     'BulkOperationError',
+    'BulkAlertCreationError',
 ]
 
 

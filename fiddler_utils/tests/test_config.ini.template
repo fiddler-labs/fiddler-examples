@@ -1,0 +1,24 @@
+# Integration Test Configuration
+# Copy this file to test_config.ini and fill in your values.
+# test_config.ini is gitignored — never commit credentials.
+#
+# Usage:
+#   cp test_config.ini.template test_config.ini
+#   # Edit test_config.ini with your Fiddler URL and token
+#   python -m pytest fiddler_utils/tests/test_integration.py -v
+
+[fiddler]
+url = https://your-org.fiddler.ai
+token = your-api-token
+
+[test]
+# Project to use for integration tests.
+# The test suite will create a temporary project if this doesn't exist.
+project_name = __bulk_alert_test__
+
+# Model to use. Must exist in the project above and have:
+# - At least 2 input columns
+# - A binary classification or regression task type
+# - Some historical production data (for sigma-based alerts)
+# If blank, the test suite will use the first model found in the project.
+model_name =

@@ -26,10 +26,10 @@ class AlertManager(BaseAssetManager[fdl.AlertRule]):
     """Manager for Fiddler alert rules.
 
     Alert rules monitor metrics and trigger notifications when thresholds are exceeded.
-    This manager provides basic CRUD operations and analysis.
+    This manager provides CRUD operations, analysis, and bulk creation support.
 
-    Note: Export/import of alerts is complex due to metric_id dependencies.
-    Current implementation focuses on listing and analysis operations.
+    Note: For cross-model alert import, metric_id mapping may need manual attention.
+    For same-model creation (including bulk creation), metric_id is used as-is.
 
     Example:
         ```python
@@ -142,25 +142,59 @@ class AlertManager(BaseAssetManager[fdl.AlertRule]):
     def _create_asset(self, model_id: str, asset_data: Dict[str, Any]) -> fdl.AlertRule:
         """Create an alert rule from data.
 
-        Note: This is a simplified implementation. metric_id needs to be
-        mapped to the target model's corresponding metric.
+        Supports both MANUAL and STD_DEV_AUTO_THRESHOLD threshold types.
+        When threshold_type is STD_DEV_AUTO_THRESHOLD, warning_threshold and
+        critical_threshold should be None, and auto_threshold_params should
+        contain {'warning_multiplier': float, 'critical_multiplier': float}.
+
+        Note: For cross-model import, metric_id may need manual mapping.
+        For bulk creation on the same model, metric_id is used as-is.
 
         Args:
             model_id: Target model ID
-            asset_data: Alert rule data dictionary
+            asset_data: Alert rule data dictionary with keys matching the
+                fdl.AlertRule constructor. SDK enum values (BinSize, Priority,
+                etc.) can be passed directly — the SDK accepts both enum
+                instances and strings.
 
         Returns:
             Created AlertRule object
-
-        Raises:
-            NotImplementedError: Alert import requires metric ID mapping
         """
-        raise NotImplementedError(
-            'Alert import is not yet fully implemented. '
-            'Metric IDs need to be mapped from source to target model. '
-            'Use AlertManager for listing and analysis operations. '
-            'Manual alert creation is recommended for now.'
-        )
+        from fiddler.constants.alert_rule import AlertThresholdAlgo
+
+        kwargs = {
+            'name': asset_data['name'],
+            'model_id': model_id,
+            'metric_id': asset_data['metric_id'],
+            'bin_size': asset_data['bin_size'],
+            'compare_to': asset_data['compare_to'],
+            'condition': asset_data['condition'],
+            'priority': asset_data['priority'],
+            'threshold_type': asset_data.get(
+                'threshold_type', AlertThresholdAlgo.MANUAL
+            ),
+            'warning_threshold': asset_data.get('warning_threshold'),
+            'critical_threshold': asset_data.get('critical_threshold'),
+            'auto_threshold_params': asset_data.get('auto_threshold_params'),
+        }
+
+        # Optional fields
+        for field in (
+            'columns',
+            'baseline_id',
+            'segment_id',
+            'compare_bin_delta',
+            'evaluation_delay',
+            'category',
+        ):
+            if asset_data.get(field) is not None:
+                kwargs[field] = asset_data[field]
+
+        alert = fdl.AlertRule(**kwargs)
+        alert.create()
+
+        logger.info(f"Created alert rule: {alert.name} (ID: {alert.id})")
+        return alert
 
     def find_alerts_by_bin_size(
         self, model_id: str, bin_size: fdl.BinSize

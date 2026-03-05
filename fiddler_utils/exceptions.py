@@ -4,7 +4,7 @@ This module defines a hierarchy of exceptions for better error handling
 and more informative error messages.
 """
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
 
 class FiddlerUtilsError(Exception):
@@ -136,3 +136,20 @@ class BulkOperationError(FiddlerUtilsError):
                 full_message += f'  - {item}: {error}\n'
 
         super().__init__(full_message)
+
+
+class BulkAlertCreationError(BulkOperationError):
+    """Raised when bulk alert creation encounters critical errors.
+
+    Only raised when on_error='raise' and a model-level error occurs.
+    Contains partial results from models processed before the error.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        partial_result: Optional[Any] = None,
+        **kwargs,
+    ):
+        self.partial_result = partial_result
+        super().__init__(message, **kwargs)
