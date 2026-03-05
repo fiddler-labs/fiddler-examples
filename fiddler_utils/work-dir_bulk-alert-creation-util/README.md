@@ -125,20 +125,28 @@ creator = BulkAlertCreator(profile=profile, scope=scope)
 
 `get_default_ml_profile()` creates these alerts:
 
-| Alert | Per-Column? | Threshold | Applied To |
-|---|---|---|---|
-| Traffic Volume | No | 2σ/3σ (sigma) | All models |
-| Data Drift (JSD) | Yes (inputs) | 0.15/0.3 (absolute) | All models |
-| Null Violations | Yes (inputs) | 5%/10% (absolute) | All models |
-| Range Violations | Yes (inputs) | 10/50 (absolute) | All models |
-| Precision Drop | No | 2σ/3σ (sigma) | Classification only |
-| Recall Drop | No | 2σ/3σ (sigma) | Classification only |
-| F1 Score Drop | No | 2σ/3σ (sigma) | Classification only |
-| MAE Spike | No | 2σ/3σ (sigma) | Regression only |
-| MAPE Spike | No | 2σ/3σ (sigma) | Regression only |
-| R2 Drop | No | 2σ/3σ (sigma) | Regression only |
+| Alert | Per-Column? | Threshold | Applied To | Data Required |
+|---|---|---|---|---|
+| Traffic Volume | No | 2σ/3σ (sigma) | All models | Inference events only |
+| Data Drift (JSD) | Yes (inputs) | 0.15/0.3 (absolute) | All models | Inference events + baseline |
+| Null Violations | Yes (inputs) | 5%/10% (absolute) | All models | Inference events only |
+| Range Violations | Yes (inputs) | 10/50 (absolute) | All models | Inference events only |
+| Precision Drop | No | 2σ/3σ (sigma) | Classification only | **Actuals/labels required** |
+| Recall Drop | No | 2σ/3σ (sigma) | Classification only | **Actuals/labels required** |
+| F1 Score Drop | No | 2σ/3σ (sigma) | Classification only | **Actuals/labels required** |
+| MAE Spike | No | 2σ/3σ (sigma) | Regression only | **Actuals/labels required** |
+| MAPE Spike | No | 2σ/3σ (sigma) | Regression only | **Actuals/labels required** |
+| R2 Drop | No | 2σ/3σ (sigma) | Regression only | **Actuals/labels required** |
 
 A model with 20 input columns gets: 1 (traffic) + 20 (drift) + 20 (null) + 20 (range) + 3 (perf) = **64 alerts**.
+
+**Important: Performance metric alerts require ground truth.** The bottom 6 alerts (precision through R2) use sigma-based thresholds computed from historical metric values. These metrics only exist if your model receives actual target values (ground truth labels) via Fiddler's publish API. If your model only logs predictions without actuals, these alerts will be created successfully but will never fire — the underlying metric will have no data for the platform to evaluate. If your models don't have actuals flowing, remove the performance specs:
+
+```python
+profile = get_default_ml_profile()
+for metric in ['precision', 'recall', 'f1_score', 'mae', 'mape', 'r2']:
+    profile.remove_spec_by_metric(metric)
+```
 
 ---
 
@@ -166,7 +174,8 @@ These are the known boundaries of the current version. See [FUTURE.md](FUTURE.md
 
 | File | Purpose |
 |---|---|
-| `README.md` | This operations manual |
+| `README.md` | Quick start and reference (this file) |
+| `OPERATIONS.md` | Full operations manual — profiles, specs, thresholds, troubleshooting |
 | `PRD.md` | Technical PRD and implementation plan |
 | `FUTURE.md` | Deferred features and improvement roadmap |
 | `temp-customer_feedback.md` | Original Thumbtack requirements (Feb 2026 call) |
