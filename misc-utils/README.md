@@ -375,7 +375,7 @@ A comprehensive model comparison utility using the `fiddler_utils` package:
 
 **Prerequisites:**
 
-- `fiddler_utils` package installed (`pip install -e .` from repo root)
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
 - Source and target Fiddler instance URLs and API tokens
 - Both models must exist
 
@@ -406,7 +406,7 @@ A complete model export and import utility using the `fiddler_utils` package:
 
 **Prerequisites:**
 
-- `fiddler_utils` package installed (`pip install -e .` from repo root)
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
 - Source and target Fiddler instance URLs and API tokens
 - Source model must exist (target model will be created)
 
@@ -450,7 +450,7 @@ An asset-level export and import utility using the `fiddler_utils` package:
 
 **Prerequisites:**
 
-- `fiddler_utils` package installed (`pip install -e .` from repo root)
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
 - Source and target Fiddler instance URLs and API tokens
 - Source and target models must exist
 
@@ -489,7 +489,7 @@ A comprehensive tutorial demonstrating FQL (Fiddler Query Language) utilities fr
 
 **Prerequisites:**
 
-- `fiddler_utils` package installed (adds parent directory to Python path)
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
 - Fiddler URL and valid API token for live examples (Sections 2-5)
 - At least one model with segments or custom metrics for demonstration
 
@@ -560,7 +560,7 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 
 **Key utilities provided in `fiddler_utils` package:**
 
-**Core FQL Module (`fiddler_utils/fql.py`):**
+**Core FQL Module ([fql.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.0.1/src/fiddler_utils/fql.py)):**
 - `extract_columns()` - Find all column references in FQL
 - `validate_fql_syntax()` - Catch syntax errors (quotes, parens)
 - `validate_column_references()` - Check schema compatibility
@@ -569,7 +569,7 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 - `get_fql_functions()` - Identify functions used
 - `is_simple_filter()` - Distinguish filters from aggregations
 
-**Reference Management (`fiddler_utils/assets/references.py`):**
+**Reference Management ([assets/references.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.0.1/src/fiddler_utils/assets/references.py)):**
 - `find_charts_using_metric()` - Find charts referencing a metric UUID
 - `find_alerts_using_metric()` - Find alerts monitoring a metric UUID
 - `find_all_metric_references()` - Comprehensive reference discovery
@@ -577,7 +577,7 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 - `migrate_chart_metric_reference()` - Update chart to reference new UUID
 - `migrate_alert_metric_reference()` - Update alert to reference new UUID
 
-**FQL Testing (`fiddler_utils/testing.py`):**
+**FQL Testing ([testing.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.0.1/src/fiddler_utils/testing.py)):**
 - `validate_metric_syntax_local()` - Fast local validation (no API calls)
 - `test_metric_definition()` - Test FQL by creating temp metric in Fiddler
 - `validate_and_preview_metric()` - Complete validation workflow
