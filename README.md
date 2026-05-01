@@ -45,53 +45,44 @@ Use-case oriented notebooks that demonstrate end-to-end workflows for solving re
 * [RAG Experiments at Scale](https://github.com/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_RAG_Experiments_at_Scale.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_RAG_Experiments_at_Scale.ipynb) — Compare RAG pipeline configurations systematically
 * [Custom Judge Evaluators](https://github.com/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_Custom_Judge_Evaluators.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_Custom_Judge_Evaluators.ipynb) — Create domain-specific evaluation criteria
 
-## Fiddler Utils Package - Admin Automation Library
+## Fiddler Utils — Admin Automation Library
 
-The [`fiddler_utils`](./fiddler_utils) package is an admin automation library designed to reduce code duplication across utility scripts and notebooks. While **not part of the official Fiddler SDK**, it is available for both Fiddler field engineers and customers to use and extend.
+`fiddler-utils` is an admin automation library for Fiddler that provides
+high-level abstractions for common administrative tasks (connection
+management, asset export/import, FQL parsing, schema validation, model
+comparison, and more). It is **not part of the official Fiddler SDK**, but
+both Fiddler field engineers and customers are welcome to use and extend it.
 
-### Key Capabilities
+The library now lives in its own public repository:
+**https://github.com/fiddler-labs/fiddler-utils**
 
-* **Connection Management** - Multi-instance support for working with multiple Fiddler deployments
-* **FQL Utilities** - Parse, validate, and manipulate Fiddler Query Language expressions
-* **Schema Validation** - Compare and validate model schemas across instances
-* **Asset Management** - Export/import segments, custom metrics, alerts, baselines, charts, and dashboards
-* **Model Operations** - Complete model export/import and comprehensive model comparison
-* **Environment Analysis** - Project and model inventory with statistics and reporting
-
-### Installation
-
-From the `fiddler-examples` repository root:
+Install the latest tagged release from git:
 
 ```bash
-pip install -e .
+pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"
+# or with uv:
+uv add "git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"
 ```
 
-### Quick Example
+For the OpenTelemetry-based event ingestion utilities
+(`log_pandas_traces`, `log_event_traces`), install with the `[otel]` extra:
+
+```bash
+pip install "fiddler-utils[otel] @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"
+```
+
+Quick example:
 
 ```python
 from fiddler_utils import get_or_init, ModelComparator, SegmentManager
 
-# Initialize connection
-get_or_init(url='https://your-instance.fiddler.ai', token='your_token')
-
-# Compare two models
-comparator = ModelComparator(model_a, model_b)
-result = comparator.compare_all()
-print(result.to_markdown())
-
-# Export/import segments
-segment_mgr = SegmentManager()
-segments = segment_mgr.export_assets(model_id=source_model.id)
-segment_mgr.import_assets(target_model_id=target_model.id, assets=segments)
+get_or_init(url="https://your-org.cloud.fiddler.ai", token="...")
 ```
 
-### Documentation
+See the [fiddler-utils README](https://github.com/fiddler-labs/fiddler-utils#readme)
+for the full API reference and usage examples.
 
-See the [fiddler_utils README](./fiddler_utils/README.md) for comprehensive documentation, API reference, and usage examples.
-
-### Integration with Utilities
-
-Several notebooks in the [`misc-utils`](./misc-utils) directory demonstrate `fiddler_utils` features:
+Several notebooks in the [`misc-utils`](./misc-utils) directory demonstrate `fiddler-utils` features:
 
 * **[export_import_models.ipynb](./misc-utils/export_import_models.ipynb)** - Complete model export/import workflows
 * **[export_import_model_assets.ipynb](./misc-utils/export_import_model_assets.ipynb)** - Asset-level transfers between models
