@@ -1,0 +1,25 @@
+misc-utils/ingest_dataframe_traces.ipynb
+  s_855c0f46f14f5f::t_00c38cb35cc53d 54
+misc-utils/compare_models.ipynb
+  s_855c0f46f14f5f::t_5dd1f5cec00b27 212
+misc-utils/check_schema_spec.py
+  s_855c0f46f14f5f::t_a68b984a519e8f 57,64,76
+misc-utils/create_dashboard_from_saved_charts.ipynb
+  s_855c0f46f14f5f::t_711962e513eafc 123,126-133,189-200,203,208,211,215-216,243,506-507,510-512
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "f970257e06d3292be7489dad94550956eaf76e20",
+  "prompts": {},
+  "sessions": {
+    "s_855c0f46f14f5f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "183bf0a8-023c-41ba-84aa-dc058a50b09e",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "dbasilfid <117305439+dbasilfid@users.noreply.github.com>"
+    }
+  }
+}
