@@ -54,14 +54,14 @@ def main() -> None:
     print(f"Columns in both: {len(comparison.in_both)}")
 
     if comparison.only_in_source:
-        print("\n⚠️ Columns present in spec but missing from schema:")
+        print("\n✗ Columns present in spec but missing from schema:")
         for col in sorted(comparison.only_in_source):
             print(f"   - {col}")
     else:
         print("\n✓ All spec columns are present in schema.")
 
     if comparison.only_in_target:
-        print("\ni Columns present in schema but not referenced in spec:")
+        print("\n→ Columns present in schema but not referenced in spec:")
         for col in sorted(comparison.only_in_target):
             print(f"   - {col}")
     else:
@@ -73,7 +73,7 @@ def main() -> None:
         print("✓ SCHEMA/SPEC VALIDATION PASSED")
         print("   All columns referenced in spec are present in schema.")
     else:
-        print("⚠️  SCHEMA/SPEC VALIDATION FAILED")
+        print("✗ SCHEMA/SPEC VALIDATION FAILED")
         print(f"   {len(comparison.only_in_source)} column(s) in spec are missing from schema.")
     print("=" * 70)
 
