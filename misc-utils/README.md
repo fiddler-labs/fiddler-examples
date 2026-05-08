@@ -166,8 +166,9 @@ A utility for creating and organizing dashboards using existing charts:
 
 **Prerequisites:**
 
-- Existing model with pre-created charts
-- Fiddler URL and valid API token
+- Source Fiddler project/model with pre-created charts
+- Target Fiddler project/model where the new dashboard will be created
+- Source and target Fiddler instance URLs and API tokens
 
 **Key features:**
 
@@ -523,6 +524,37 @@ A comprehensive tutorial demonstrating FQL (Fiddler Query Language) utilities fr
 - Complements `export_import_model_assets.ipynb` with FQL-specific capabilities
 - Demonstrates safe transformation workflows with comprehensive validation
 
+### ingest_dataframe_traces.ipynb
+
+A utility for ingesting trace/span records from a pandas DataFrame into a Fiddler LLM application using OpenTelemetry:
+
+- Loads trace data from a CSV file into pandas
+- Maps DataFrame columns to OpenTelemetry semantic attributes
+- Adds static agent and application attributes required by Fiddler
+- Emits traces with `log_pandas_traces` from `fiddler_utils.assets.ingestion`
+
+**Prerequisites:**
+
+- `fiddler-utils[otel]` installed: `pip install "fiddler-utils[otel] @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
+- Fiddler URL and valid API token
+- LLM application UUID, agent ID, and agent name
+- CSV file containing trace/span data
+
+**Configuration:**
+
+- `FIDDLER_URL`
+- `FIDDLER_TOKEN`
+- `FIDDLER_APP_UUID`
+- `FIDDLER_AGENT_ID`
+- `FIDDLER_AGENT_NAME`
+- `PATH_TO_CSV_FILE`
+
+**Usage notes:**
+
+- Requires a Fiddler LLM application with OTLP ingestion enabled
+- Uses the `[otel]` extra because OpenTelemetry dependencies are optional
+- The CSV column mapping can be adapted to match the source trace data
+
 ---
 
 These notebooks demonstrate practical solutions for common Fiddler administrative tasks that might be encountered by customer success and field AI engineers.
@@ -556,9 +588,9 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 **Prerequisites:**
 - Fiddler environment with models containing segments or custom metrics
 - API token with read access (write access for Sections 5-7)
-- Python packages: `fiddler-client`, `fiddler_utils`
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
 
-**Key utilities provided in `fiddler_utils` package:**
+**Key utilities provided by the `fiddler-utils` package:**
 
 **Core FQL Module ([fql.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.0.1/src/fiddler_utils/fql.py)):**
 - `extract_columns()` - Find all column references in FQL
@@ -603,4 +635,3 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 - ⚠️ Iterative development (40% coverage - still requires delete/recreate)
 - ⚠️ FQL validation (60% coverage - local checks only)
 - ❌ Metric editability (0% - requires API changes)
-
