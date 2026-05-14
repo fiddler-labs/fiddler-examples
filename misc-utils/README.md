@@ -166,8 +166,9 @@ A utility for creating and organizing dashboards using existing charts:
 
 **Prerequisites:**
 
-- Existing model with pre-created charts
-- Fiddler URL and valid API token
+- Source Fiddler project/model with pre-created charts
+- Target Fiddler project/model where the new dashboard will be created
+- Source and target Fiddler instance URLs and API tokens
 
 **Key features:**
 
@@ -375,7 +376,7 @@ A comprehensive model comparison utility using the `fiddler_utils` package:
 
 **Prerequisites:**
 
-- `fiddler_utils` package installed (`pip install -e .` from repo root)
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
 - Source and target Fiddler instance URLs and API tokens
 - Both models must exist
 
@@ -406,7 +407,7 @@ A complete model export and import utility using the `fiddler_utils` package:
 
 **Prerequisites:**
 
-- `fiddler_utils` package installed (`pip install -e .` from repo root)
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
 - Source and target Fiddler instance URLs and API tokens
 - Source model must exist (target model will be created)
 
@@ -450,7 +451,7 @@ An asset-level export and import utility using the `fiddler_utils` package:
 
 **Prerequisites:**
 
-- `fiddler_utils` package installed (`pip install -e .` from repo root)
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
 - Source and target Fiddler instance URLs and API tokens
 - Source and target models must exist
 
@@ -489,7 +490,7 @@ A comprehensive tutorial demonstrating FQL (Fiddler Query Language) utilities fr
 
 **Prerequisites:**
 
-- `fiddler_utils` package installed (adds parent directory to Python path)
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
 - Fiddler URL and valid API token for live examples (Sections 2-5)
 - At least one model with segments or custom metrics for demonstration
 
@@ -522,6 +523,37 @@ A comprehensive tutorial demonstrating FQL (Fiddler Query Language) utilities fr
 - Useful for learning FQL manipulation before asset migration
 - Complements `export_import_model_assets.ipynb` with FQL-specific capabilities
 - Demonstrates safe transformation workflows with comprehensive validation
+
+### ingest_dataframe_traces.ipynb
+
+A utility for ingesting trace/span records from a pandas DataFrame into a Fiddler LLM application using OpenTelemetry:
+
+- Loads trace data from a CSV file into pandas
+- Maps DataFrame columns to OpenTelemetry semantic attributes
+- Adds static agent and application attributes required by Fiddler
+- Emits traces with `log_pandas_traces` from `fiddler_utils.assets.ingestion`
+
+**Prerequisites:**
+
+- `fiddler-utils[otel]` installed: `pip install "fiddler-utils[otel] @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
+- Fiddler URL and valid API token
+- LLM application UUID, agent ID, and agent name
+- CSV file containing trace/span data
+
+**Configuration:**
+
+- `FIDDLER_URL`
+- `FIDDLER_TOKEN`
+- `FIDDLER_APP_UUID`
+- `FIDDLER_AGENT_ID`
+- `FIDDLER_AGENT_NAME`
+- `PATH_TO_CSV_FILE`
+
+**Usage notes:**
+
+- Requires a Fiddler LLM application with OTLP ingestion enabled
+- Uses the `[otel]` extra because OpenTelemetry dependencies are optional
+- The CSV column mapping can be adapted to match the source trace data
 
 ---
 
@@ -556,11 +588,11 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 **Prerequisites:**
 - Fiddler environment with models containing segments or custom metrics
 - API token with read access (write access for Sections 5-7)
-- Python packages: `fiddler-client`, `fiddler_utils`
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
 
-**Key utilities provided in `fiddler_utils` package:**
+**Key utilities provided by the `fiddler-utils` package:**
 
-**Core FQL Module (`fiddler_utils/fql.py`):**
+**Core FQL Module ([fql.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.0.1/src/fiddler_utils/fql.py)):**
 - `extract_columns()` - Find all column references in FQL
 - `validate_fql_syntax()` - Catch syntax errors (quotes, parens)
 - `validate_column_references()` - Check schema compatibility
@@ -569,7 +601,7 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 - `get_fql_functions()` - Identify functions used
 - `is_simple_filter()` - Distinguish filters from aggregations
 
-**Reference Management (`fiddler_utils/assets/references.py`):**
+**Reference Management ([assets/references.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.0.1/src/fiddler_utils/assets/references.py)):**
 - `find_charts_using_metric()` - Find charts referencing a metric UUID
 - `find_alerts_using_metric()` - Find alerts monitoring a metric UUID
 - `find_all_metric_references()` - Comprehensive reference discovery
@@ -577,7 +609,7 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 - `migrate_chart_metric_reference()` - Update chart to reference new UUID
 - `migrate_alert_metric_reference()` - Update alert to reference new UUID
 
-**FQL Testing (`fiddler_utils/testing.py`):**
+**FQL Testing ([testing.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.0.1/src/fiddler_utils/testing.py)):**
 - `validate_metric_syntax_local()` - Fast local validation (no API calls)
 - `test_metric_definition()` - Test FQL by creating temp metric in Fiddler
 - `validate_and_preview_metric()` - Complete validation workflow
@@ -603,4 +635,3 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 - ⚠️ Iterative development (40% coverage - still requires delete/recreate)
 - ⚠️ FQL validation (60% coverage - local checks only)
 - ❌ Metric editability (0% - requires API changes)
-
