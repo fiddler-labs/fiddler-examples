@@ -10,7 +10,7 @@ that are not referenced in the spec.
 
 Uses fiddler-utils for robust validation. Install with:
 
-    pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"
+    pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.1.0"
 
 Environment variables:
     FIDDLER_URL           Fiddler instance URL
