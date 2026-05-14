@@ -1,0 +1,27 @@
+misc-utils/fql_utilities_demo.ipynb
+  265c962b1c5f55c1 1271
+misc-utils/ingest_dataframe_traces.ipynb
+  265c962b1c5f55c1 5,8-35,41,45-49,51-52,54
+misc-utils/copying_a_dashboard.ipynb
+  265c962b1c5f55c1 715-716,718-724
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "444d10e4c30d3082198e1fddbec940c5010004fb",
+  "prompts": {
+    "265c962b1c5f55c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03005f73-8ab9-46ac-9931-a39dcaecea03",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "dbasilfid",
+      "messages": [],
+      "total_additions": 48,
+      "total_deletions": 74,
+      "accepted_lines": 48,
+      "overriden_lines": 0
+    }
+  }
+}
