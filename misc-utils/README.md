@@ -376,7 +376,7 @@ A comprehensive model comparison utility using the `fiddler_utils` package:
 
 **Prerequisites:**
 
-- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.1.1"`
 - Source and target Fiddler instance URLs and API tokens
 - Both models must exist
 
@@ -407,7 +407,7 @@ A complete model export and import utility using the `fiddler_utils` package:
 
 **Prerequisites:**
 
-- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.1.1"`
 - Source and target Fiddler instance URLs and API tokens
 - Source model must exist (target model will be created)
 
@@ -451,7 +451,7 @@ An asset-level export and import utility using the `fiddler_utils` package:
 
 **Prerequisites:**
 
-- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.1.1"`
 - Source and target Fiddler instance URLs and API tokens
 - Source and target models must exist
 
@@ -490,7 +490,7 @@ A comprehensive tutorial demonstrating FQL (Fiddler Query Language) utilities fr
 
 **Prerequisites:**
 
-- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.1.1"`
 - Fiddler URL and valid API token for live examples (Sections 2-5)
 - At least one model with segments or custom metrics for demonstration
 
@@ -535,7 +535,7 @@ A utility for ingesting trace/span records from a pandas DataFrame into a Fiddle
 
 **Prerequisites:**
 
-- `fiddler-utils[otel]` installed: `pip install "fiddler-utils[otel] @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
+- `fiddler-utils[otel]` installed: `pip install "fiddler-utils[otel] @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.1.1"`
 - Fiddler URL and valid API token
 - LLM application UUID, agent ID, and agent name
 - CSV file containing trace/span data
@@ -554,6 +554,63 @@ A utility for ingesting trace/span records from a pandas DataFrame into a Fiddle
 - Requires a Fiddler LLM application with OTLP ingestion enabled
 - Uses the `[otel]` extra because OpenTelemetry dependencies are optional
 - The CSV column mapping can be adapted to match the source trace data
+
+### rbac_automation.ipynb
+
+A demonstration of role-based access control (RBAC) automation using the
+`fiddler_utils.rbac` subpackage. Covers both the low-level managers and the
+desired-state `BulkRBACSync` orchestrator against Fiddler's V3 API.
+
+**Prerequisites:**
+
+- `fiddler-utils >= 1.1.0` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.1.1"`
+- Fiddler URL and an API token belonging to an **Org Admin** (RBAC endpoints
+  require admin-level permissions)
+- At least one project to assign roles against
+- (Optional) An existing user email to add to a demo team
+
+**Configuration (env vars, all optional except for any non-dry-run cells):**
+
+- `FIDDLER_URL`, `FIDDLER_TOKEN`
+- `FIDDLER_PROJECT` — project to use for project-role assignments
+- `FIDDLER_TEST_USER_EMAIL` — user to add to the demo team
+
+**Sections:**
+
+- **Section 1 — Low-level managers:** `UserManager.list` / `find_by_email`,
+  `TeamManager.get_or_create` / `add_member`, `ProjectRoleManager.assign_team`
+  / `list_assignable_users` / `list_assignable_teams`.
+- **Section 2 — Bulk RBAC sync:** Build an `RBACSpec` with `TeamSpec` +
+  `ProjectAssignmentSpec`, dry-run with `print_report` / `export_report_csv`,
+  apply (gated), then re-run to confirm idempotency.
+- **Section 3 — Error-handling vignette:** Demonstrates the `on_missing_user`
+  knob with both `"warn"` (the default) and `"raise"` (the CI-friendly
+  variant), and shows how `on_org_admin_assignment` is wired up — the 422
+  itself can't safely be triggered in a sandbox demo, so the cell explains
+  what would happen if a spec assigned an explicit role to an Org Admin.
+- **Section 4 — Cleanup:** Tears down all sandboxed resources, gated behind
+  a `CLEANUP = True` flag.
+
+**Safety defaults:**
+
+- All cells are dry-run only until you flip `APPLY = True` near the top.
+- Cleanup is also gated behind a separate `CLEANUP = True` flag.
+- All teams are created with a `rbac_example_<unique_suffix>` naming
+  convention so the example cannot collide with real customer resources.
+- Pruning flags (`prune_extra_members`, `prune_extra_teams`,
+  `prune_extra_project_roles`) default to `False` — the spec is strictly
+  additive unless you opt in.
+
+**Usage notes:**
+
+- Useful for onboarding flows, drift detection, audit reporting, and
+  scheduled / repeated RBAC reconciliation.
+- The orchestrator is idempotent: re-running a converged spec reports zero
+  `total_changes`.
+- `prune_extra_project_roles` only operates on projects mentioned in the
+  spec — never org-wide.
+- The RBAC subpackage shipped in
+  [fiddler-utils v1.1.1](https://github.com/fiddler-labs/fiddler-utils/releases/tag/v1.1.1).
 
 ---
 
@@ -588,11 +645,11 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 **Prerequisites:**
 - Fiddler environment with models containing segments or custom metrics
 - API token with read access (write access for Sections 5-7)
-- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.0.1"`
+- `fiddler-utils` installed: `pip install "fiddler-utils @ git+https://github.com/fiddler-labs/fiddler-utils.git@v1.1.1"`
 
 **Key utilities provided by the `fiddler-utils` package:**
 
-**Core FQL Module ([fql.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.0.1/src/fiddler_utils/fql.py)):**
+**Core FQL Module ([fql.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.1.1/src/fiddler_utils/fql.py)):**
 - `extract_columns()` - Find all column references in FQL
 - `validate_fql_syntax()` - Catch syntax errors (quotes, parens)
 - `validate_column_references()` - Check schema compatibility
@@ -601,7 +658,7 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 - `get_fql_functions()` - Identify functions used
 - `is_simple_filter()` - Distinguish filters from aggregations
 
-**Reference Management ([assets/references.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.0.1/src/fiddler_utils/assets/references.py)):**
+**Reference Management ([assets/references.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.1.1/src/fiddler_utils/assets/references.py)):**
 - `find_charts_using_metric()` - Find charts referencing a metric UUID
 - `find_alerts_using_metric()` - Find alerts monitoring a metric UUID
 - `find_all_metric_references()` - Comprehensive reference discovery
@@ -609,7 +666,7 @@ These notebooks demonstrate practical solutions for common Fiddler administrativ
 - `migrate_chart_metric_reference()` - Update chart to reference new UUID
 - `migrate_alert_metric_reference()` - Update alert to reference new UUID
 
-**FQL Testing ([testing.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.0.1/src/fiddler_utils/testing.py)):**
+**FQL Testing ([testing.py](https://github.com/fiddler-labs/fiddler-utils/blob/v1.1.1/src/fiddler_utils/testing.py)):**
 - `validate_metric_syntax_local()` - Fast local validation (no API calls)
 - `test_metric_definition()` - Test FQL by creating temp metric in Fiddler
 - `validate_and_preview_metric()` - Complete validation workflow
