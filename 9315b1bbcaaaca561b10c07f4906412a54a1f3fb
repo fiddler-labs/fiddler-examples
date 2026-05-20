@@ -1,0 +1,23 @@
+README.md
+  265c962b1c5f55c1 48,50-54,56-57,59,61-65,67-68,71,74,79,82-83,85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "9315b1bbcaaaca561b10c07f4906412a54a1f3fb",
+  "prompts": {
+    "265c962b1c5f55c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03005f73-8ab9-46ac-9931-a39dcaecea03",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "dbasilfid",
+      "messages": [],
+      "total_additions": 22,
+      "total_deletions": 31,
+      "accepted_lines": 22,
+      "overriden_lines": 0
+    }
+  }
+}
