@@ -76,10 +76,10 @@ logger = logging.getLogger(__name__)
 
 # Authentication credentials
 URL = 'https://customer.fiddler.ai'
-TOKEN = 'ADD_YOUR_TOKEN_HERE'
+API_KEY = 'ADD_YOUR_API_KEY_HERE'
 
 # Initialize Fiddler client
-fdl.init(url=URL, token=TOKEN)
+fdl.init(url=URL, token=API_KEY)
 logger.info(f"Successfully connected to Fiddler at {URL}")
 logger.info(f"Client version: {fdl.__version__}")
 logger.info(f"Server version:    {fdl.conn.server_version}")

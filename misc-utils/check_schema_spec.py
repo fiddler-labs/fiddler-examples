@@ -14,7 +14,7 @@ Uses fiddler-utils for robust validation. Install with:
 
 Environment variables:
     FIDDLER_URL           Fiddler instance URL
-    FIDDLER_TOKEN         Fiddler API key
+    FIDDLER_API_KEY         Fiddler API key
     FIDDLER_MODEL_ID      Model UUID (takes precedence over project/model name)
     FIDDLER_PROJECT_NAME  Project name (used when FIDDLER_MODEL_ID is not set)
     FIDDLER_MODEL_NAME    Model name (used when FIDDLER_MODEL_ID is not set)
@@ -29,7 +29,7 @@ from fiddler_utils import SchemaValidator, get_or_init
 
 def main() -> None:
     url = os.environ.get("FIDDLER_URL", "https://your-org.cloud.fiddler.ai")
-    token = os.environ.get("FIDDLER_TOKEN", "YOUR_FIDDLER_TOKEN")
+    token = os.environ.get("FIDDLER_API_KEY", "YOUR_FIDDLER_API_KEY")
     model_id = os.environ.get("FIDDLER_MODEL_ID", "")
     project_name = os.environ.get("FIDDLER_PROJECT_NAME", "your-project-name")
     model_name = os.environ.get("FIDDLER_MODEL_NAME", "your-model-name")

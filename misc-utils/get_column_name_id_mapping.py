@@ -50,10 +50,10 @@ if __name__ == "__main__":
     # Replace these with your actual values
 
     URL = "https://thumbtack.fiddler.ai"
-    AUTH_TOKEN = ""
+    API_KEY = ""
     MODEL_ID = ""
     
-    column_mapping = get_fiddler_model_column_mapping(MODEL_ID, URL, AUTH_TOKEN)
+    column_mapping = get_fiddler_model_column_mapping(MODEL_ID, URL, API_KEY)
     
     if column_mapping:
         print(json.dumps(column_mapping, indent=2))
