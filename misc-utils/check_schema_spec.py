@@ -14,7 +14,7 @@ Uses fiddler-utils for robust validation. Install with:
 
 Environment variables:
     FIDDLER_URL           Fiddler instance URL
-    FIDDLER_TOKEN         Fiddler API token
+    FIDDLER_TOKEN         Fiddler API key
     FIDDLER_MODEL_ID      Model UUID (takes precedence over project/model name)
     FIDDLER_PROJECT_NAME  Project name (used when FIDDLER_MODEL_ID is not set)
     FIDDLER_MODEL_NAME    Model name (used when FIDDLER_MODEL_ID is not set)
