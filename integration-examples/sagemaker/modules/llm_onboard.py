@@ -111,4 +111,4 @@ def create_and_publish_llm(project, model_name: str) -> list[fdl.Model, str]:
 
     print('Printing sample dataset...')
     print(llm_events_df.head(10).to_markdown())
-    return llm_application, llm_application.publish(llm_events_df).id
+    return llm_application, llm_application.publish_batch(source=llm_events_df).id
