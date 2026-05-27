@@ -1,0 +1,45 @@
+quickstart/latest/Fiddler_Quickstart_Surrogate_XAI.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 334,397,508
+quickstart/latest/Fiddler_Quickstart_Image_Monitoring.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 572,615
+quickstart/latest/Fiddler_Quickstart_Add_Model_Artifact.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 472,615
+quickstart/latest/Fiddler_Quickstart_Imbalanced_Data.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 365,374,453,457
+quickstart/latest/Fiddler_Quickstart_LLM_Chatbot.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 451
+quickstart/latest/Fiddler_Quickstart_LLMaaJ_Prompt_Spec.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 575
+integration-examples/sagemaker/modules/llm_onboard.py
+  s_1a6d9e1a485e90::t_0c7c00f3062fff 114
+quickstart/latest/Fiddler_Quickstart_LLM_Comparison.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 365,390
+quickstart/latest/Fiddler_Quickstart_Simple_Monitoring.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 576,686
+quickstart/latest/Fiddler_Quickstart_Ranking_Model.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 341,436
+quickstart/latest/Fiddler_Quickstart_NLP_Multiclass_Monitoring.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 396,465
+integration-examples/sagemaker/FiddlerSageMakerDemo.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 258,283
+misc-utils/alerts_gen_testing.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 247,493
+quickstart/latest/Fiddler_Quickstart_Regression_Model.ipynb
+  s_1a6d9e1a485e90::t_f00aafd2d3e4a2 404,567
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "1adcfc58abbf6609a94c4fd90e2d1ce85e251712",
+  "prompts": {},
+  "sessions": {
+    "s_1a6d9e1a485e90": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9110f388-e7eb-45ac-b691-45e2f38673c5",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "dbasilfid <117305439+dbasilfid@users.noreply.github.com>"
+    }
+  }
+}
