@@ -259,17 +259,14 @@ function evaluatorDefs() {
     const e = EVALUATORS.find((x) => x.key === ev.key) ?? ev;
     const typed = ev.kind === 'typed';
     const opts = settings(ev);
-    return `<li class="ev-card">
-      <div class="ev-name"><b>${esc(e.name)}</b>
-        <span class="ev-kind">${typed ? 'typed classifier' : 'generative'}</span></div>
-      <code class="id">${esc(ev.model ?? '')}</code>
-      <dl>
-        <dt>returns</dt><dd>${esc(returns(ev.key, ev))}</dd>
-        <dt>how</dt><dd>${typed ? 'one choice question, calibrated probabilities'
-                                : 'free text parsed into the fields'}</dd>
-        <dt>settings</dt><dd>${opts === 'defaults' ? '<span class="muted">defaults</span>' : `<code>${esc(opts)}</code>`}</dd>
-      </dl>
-    </li>`;
+    return `<tr>
+      <td><b>${esc(e.name)}</b><code class="id">${esc(ev.model ?? '')}</code></td>
+      <td><span title="${typed
+          ? 'Answers one fixed choice question with calibrated probabilities; no free text.'
+          : 'Writes free text, which is parsed into the requested fields.'}">${typed ? 'typed' : 'generative'}</span></td>
+      <td><code>${esc(returns(ev.key, ev))}</code></td>
+      <td>${opts === 'defaults' ? '<span class="muted">defaults</span>' : `<code>${esc(opts)}</code>`}</td>
+    </tr>`;
   }).join('');
 
   // One card per level, definition quoted verbatim from the rubric file.
@@ -283,10 +280,13 @@ function evaluatorDefs() {
         rubric.matches_run === false ? ' <span class="high">(newest file; the run recorded a different version)</span>' : ''}`
     : na('rubric file not found');
 
-  return `<details class="defs">
+  return `<details id="evaluator-definitions" class="defs">
     <summary>Evaluators and rubric <span class="hint">— who rated, what they returned, and the
       definitions they were given</span></summary>
-    <ul class="ev-cards">${evaluators}</ul>
+    <table class="ev-table">
+      <thead><tr><th>evaluator</th><th>kind</th><th>returns</th><th>settings</th></tr></thead>
+      <tbody>${evaluators}</tbody>
+    </table>
     <div class="defs-col">
       ${levels ? `<div class="lab">Risk levels, as defined in rubric ${rubricLine}</div>
         <ul class="level-cards">${levels}</ul>` : ''}
@@ -1093,7 +1093,9 @@ function applyHash() {
   // when the anchor is first resolved. Do it once the target exists.
   const id = location.hash.slice(1);
   if (id && id !== 'repeatability') {
-    document.getElementById(id)?.scrollIntoView({ block: 'start' });
+    const target = document.getElementById(id);
+    if (target?.matches('details')) target.open = true;
+    target?.scrollIntoView({ block: 'start' });
   }
 }
 addEventListener('hashchange', applyHash);

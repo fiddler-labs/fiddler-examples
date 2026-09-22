@@ -117,3 +117,17 @@ Output is redacted before it reaches an evaluator, so a model classifying a secr
 span sees `[REDACTED:value]` rather than a credential. Models cited these redaction markers
 in their rationales as evidence that secrets were found. That is reasonable, but it means
 the evaluators are partly reading our redactor's output, not the raw command output.
+
+## What this experiment can and cannot support
+
+Taken together, the limitations above bound the claims. This experiment can support:
+
+- Whether the three models agreed on specific spans, and exactly where they did not.
+- Observed latency, token usage and reported cost per evaluator on this workload.
+- Qualitative comparison of the two generative peers' rationales on identical evidence.
+
+It cannot support:
+
+- That any model is more accurate, better calibrated, or safer than another.
+- Any general statement about coding-agent risk, or about these models beyond this rubric
+  version, this agent, and this span set.

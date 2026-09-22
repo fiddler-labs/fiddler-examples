@@ -193,11 +193,6 @@ node artifacts/repeatability/scripts/repeat.mjs    # two fresh calls per model p
 node artifacts/repeatability/scripts/analyze.mjs   # writes repeat-analysis.json
 ```
 
-The charts in `docs/images/` are rendered from the saved analysis by
-`tools/render_repeatability_chart.py` and `tools/render_repeatability_paths.py`. They need
-Python 3 with Pillow (`pip install pillow`) and read fonts from
-`/System/Library/Fonts/Supplemental`, so out of the box they run on macOS only.
-
 ## Safety
 
 - All scenario data is fabricated. Credential-shaped values are fake.

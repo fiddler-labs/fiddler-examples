@@ -143,19 +143,19 @@ button.active, button[aria-expanded="true"] { border-color: var(--text); }
 .defs .lab { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
   margin: 4px 0 8px; }
 .defs .lab code.id { text-transform: none; letter-spacing: 0; }
-.ev-cards { list-style: none; margin: 10px 0 18px; padding: 0; display: grid; gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); max-width: 960px; }
-.ev-card { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 12px;
-  background: rgba(255, 255, 255, .015); }
-.ev-card .ev-name { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.ev-card .ev-name b { font-weight: 600; font-size: 13px; }
-.ev-card .ev-kind { color: var(--muted); font-size: 11px; white-space: nowrap; }
-.ev-card > code.id { display: block; margin: 2px 0 8px; }
-.ev-card dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; margin: 0; }
-.ev-card dt { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
-.ev-card dd { margin: 0; line-height: 1.45; }
-.ev-card dd code { font-size: 11px; }
-.ev-card .muted { color: var(--muted); }
+.sumstrip table.ev-table { border-collapse: collapse; font-size: 12px; margin: 10px 0 18px;
+  width: auto; table-layout: auto; }
+.ev-table th, .ev-table td { border: 0; text-align: left; }
+.ev-table th { color: var(--muted); font-weight: 400; font-size: 11px;
+  text-transform: uppercase; letter-spacing: .06em; padding: 0 28px 6px 0; border-bottom: 1px solid var(--line); }
+.ev-table td { padding: 8px 28px 8px 0; vertical-align: top; border-bottom: 1px solid var(--line);
+  white-space: nowrap; overflow-wrap: normal; }
+.ev-table tbody tr:last-child td { border-bottom: 0; }
+.ev-table td:last-child, .ev-table th:last-child { padding-right: 0; }
+.ev-table td b { font-weight: 600; font-size: 13px; display: block; }
+.ev-table td code.id { display: block; margin-top: 1px; }
+.ev-table td code { font-size: 12px; }
+.ev-table td span[title] { cursor: help; border-bottom: 1px dotted var(--muted); }
 .defs-col { max-width: 960px; }
 .level-cards { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
