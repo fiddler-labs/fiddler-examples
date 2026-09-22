@@ -441,6 +441,7 @@ function renderScenarios() {
       state.span = firstSpanOf(state.scenario);
       state.rawView = false;
       render();
+      syncCommandHash();
     };
   }
 }
@@ -483,6 +484,7 @@ function renderSpans() {
       state.rawView = false;
       renderSpans();
       renderDetail();
+      syncCommandHash();
     };
   }
 }
@@ -1027,10 +1029,16 @@ function openInRatings(scenarioId, spanId) {
   renderScenarios();
   renderSpans();
   renderDetail();
+  syncCommandHash();
   $('detail').scrollIntoView({ block: 'start' });
 }
 
 /* ---------------- controls ---------------- */
+
+function syncCommandHash() {
+  const hash = state.span ? `#command=${encodeURIComponent(state.span)}` : '';
+  history.replaceState(null, '', hash || location.pathname);
+}
 
 $('view-ratings').onclick = () => setView('ratings');
 $('view-repeat').onclick = () => setView('repeat');
@@ -1079,6 +1087,7 @@ $('span-list').addEventListener('keydown', (e) => {
     state.rawView = false;
     renderSpans();
     renderDetail();
+    syncCommandHash();
     $('span-list').querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
   }
 });
@@ -1089,6 +1098,23 @@ $('span-list').addEventListener('keydown', (e) => {
  */
 function applyHash() {
   setView(location.hash.startsWith('#repeat') ? 'repeat' : 'ratings', { updateHash: false });
+  const commandId = new URLSearchParams(location.hash.slice(1)).get('command');
+  const commandTrace = commandId && state.data.traces.find((t) =>
+    t.spans.some((s) => s.span_id === commandId));
+  if (commandTrace) {
+    state.filter = '';
+    state.onlyDisagree = false;
+    $('filter').value = '';
+    $('only-disagree').checked = false;
+    state.scenario = commandTrace.scenario_id;
+    state.span = commandId;
+    state.rawView = false;
+    renderScenarios();
+    renderSpans();
+    renderDetail();
+    $('per-command-ratings').scrollIntoView({ block: 'start' });
+    return;
+  }
   // The view renders after navigation, so the browser has nothing to scroll to
   // when the anchor is first resolved. Do it once the target exists.
   const id = location.hash.slice(1);
