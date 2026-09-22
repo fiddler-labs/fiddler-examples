@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testing Jev for Coding Agent Evals: Comparing Speed, Cost, and Explanation</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <div class="titles">
+    <h1>Testing Jev for Coding Agent Evals<span class="subtitle">: Comparing Speed, Cost, and Explanation</span></h1>
+    <p class="caveat" id="caveat" hidden></p>
+  </div>
+  <div class="header-controls">
+    <span class="switch" role="tablist" aria-label="View">
+      <button id="view-ratings" class="active" role="tab" aria-selected="true"
+              aria-controls="ratings-view">ratings</button>
+      <button id="view-repeat" role="tab" aria-selected="false"
+              aria-controls="repeat-view">repeatability</button>
+    </span>
+  </div>
+</header>
+
+<div id="ratings-view" role="tabpanel" aria-labelledby="view-ratings">
+<section id="summary" class="sumstrip" aria-label="Summary"></section>
+
+<div class="explore-head" id="per-command-ratings">
+  <h2>Per-command ratings</h2>
+</div>
+
+<div class="panes">
+  <nav class="pane pane-scenarios" aria-label="Scenarios">
+    <h2>Scenarios <span class="legend">cmds · contested</span></h2>
+    <input id="filter" placeholder="filter scenarios…">
+    <label class="muted opt">
+      <input type="checkbox" id="only-disagree"> only commands they disagreed on
+    </label>
+    <div id="scenario-list" role="listbox" aria-label="Scenarios"></div>
+  </nav>
+
+  <nav class="pane pane-spans" aria-label="Commands">
+    <h2>Commands <span id="span-legend" class="legend"></span></h2>
+    <div id="span-list" role="listbox" aria-label="Commands" tabindex="0"></div>
+  </nav>
+
+  <main class="pane pane-detail" id="detail" aria-live="polite"></main>
+</div>
+</div>
+
+<!-- Opened deliberately from the header. The ratings path above never changes. -->
+<section id="repeat-view" role="tabpanel" aria-labelledby="view-repeat" hidden></section>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

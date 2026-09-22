@@ -1,0 +1,12 @@
+# Only the build inputs are needed on Vercel. Keep credentials and scratch
+# runs off the upload entirely.
+.env
+.env.local
+.env.*.local
+artifacts/archive/
+artifacts/run-1/
+artifacts/repeat/
+docs/
+tools/
+test/
+fixtures/
