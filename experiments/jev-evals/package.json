@@ -1,0 +1,26 @@
+{
+  "name": "jev-evals",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Deterministic fabricated coding-agent trace scenarios evaluated by three AI Gateway models.",
+  "scripts": {
+    "test": "node --test test/",
+    "trace:live": "node src/cli/run-traces.js --mode=live",
+    "eval:live": "node src/cli/run-evals.js --mode=live",
+    "summarize": "node src/cli/summarize.js",
+    "report": "node src/cli/report.js",
+    "ui": "node ui/server.js",
+    "ui:build": "node ui/build.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@ai-sdk/gateway": "^4.0.87",
+    "@vercel/sandbox": "^3.3.0",
+    "ai": "^7.0.107",
+    "zod": "^4.6.5"
+  }
+}

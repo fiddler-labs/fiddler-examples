@@ -1,0 +1,109 @@
+{
+  "study": "three-model-repeatability",
+  "mode": "live",
+  "simulated": false,
+  "repeat_run_marker": "jevrepeat-20260921223320-6326e5",
+  "baseline_run_marker": "jevlive2-20260921221734-91ea27",
+  "baseline_eval_created_at": "2026-09-21T22:19:58.558Z",
+  "evaluators": [
+    {
+      "key": "jev",
+      "model": "typesafe-ai/jev",
+      "kind": "typed"
+    },
+    {
+      "key": "gemini",
+      "model": "google/gemini-3.5-flash-lite",
+      "kind": "generative",
+      "providerOptions": {
+        "google": {
+          "thinkingConfig": {
+            "thinkingLevel": "minimal"
+          }
+        },
+        "gateway": {
+          "only": [
+            "vertex"
+          ]
+        }
+      }
+    },
+    {
+      "key": "openai",
+      "model": "openai/gpt-5.4-nano",
+      "kind": "generative",
+      "providerOptions": {
+        "openai": {
+          "reasoningEffort": "none"
+        },
+        "gateway": {
+          "only": [
+            "openai"
+          ]
+        }
+      }
+    }
+  ],
+  "replicates_per_span_per_model": 2,
+  "spans": 31,
+  "calls": 186,
+  "errors": 0,
+  "per_model": {
+    "jev": {
+      "model": "typesafe-ai/jev",
+      "kind": "typed",
+      "calls": 62,
+      "errors": 0,
+      "observed_model_ids": [
+        "typesafe-ai/jev"
+      ],
+      "baseline_model_ids": [
+        "typesafe-ai/jev"
+      ],
+      "prompt_hash_matches_baseline": 62
+    },
+    "gemini": {
+      "model": "google/gemini-3.5-flash-lite",
+      "kind": "generative",
+      "calls": 62,
+      "errors": 0,
+      "observed_model_ids": [
+        "google/gemini-3.5-flash-lite"
+      ],
+      "baseline_model_ids": [
+        "google/gemini-3.5-flash-lite"
+      ],
+      "prompt_hash_matches_baseline": 62
+    },
+    "openai": {
+      "model": "openai/gpt-5.4-nano",
+      "kind": "generative",
+      "calls": 62,
+      "errors": 0,
+      "observed_model_ids": [
+        "openai/gpt-5.4-nano"
+      ],
+      "baseline_model_ids": [
+        "openai/gpt-5.4-nano"
+      ],
+      "prompt_hash_matches_baseline": 62
+    }
+  },
+  "rubric_id": "bash-span-risk",
+  "rubric_version": "2.0.0",
+  "rubric_hash": "f9b9aa2638f00f9bd553d42c044c107f4e7c423913101fc5a9fb2151cbf7fbc8",
+  "shared_prompt_hash": "5792013e915278f615ab6cbc2530ac7b03b5e08ed2fef8303294b3d0c9ff45c0",
+  "rubric_hash_matches_baseline": true,
+  "shared_prompt_hash_matches_baseline": true,
+  "config_notes": {
+    "call_path": "src/evaluators/index.js evaluateSpan - unchanged, the same dispatch the baseline used",
+    "jev_request_options": "experimental_evaluate called with model/state/questions only; no temperature, top_p, seed or version pin is available or set",
+    "generative_request_options": "generateObject called with model/schema/system/prompt plus the providerOptions declared in src/config.js; no temperature, top_p or seed is set. Each peer is pinned to its vendor-recommended minimal reasoning setting (Gemini thinkingBudget 0, gpt-5.4-nano reasoningEffort none) and to one serving provider (gateway.only), identically in baseline and repeats",
+    "rate_limit_handling": "a rate-limited call waits for the window and is retried rather than being recorded as an error; per-evaluator pacing is available via minIntervalMs in src/config.js and is not needed on the current plan. Waiting changes when a call is made, not what is sent",
+    "version_pinning": "the Gateway returns only the model slug for all three models; no version or build identifier is exposed, so identical model builds between baseline and repeats cannot be proven",
+    "no_agent_rerun": "Copilot was not rerun; no captured shell command was executed; no sandbox was created"
+  },
+  "started_at": "2026-09-21T22:33:20.168Z",
+  "finished_at": "2026-09-21T22:37:19.656Z",
+  "created_at": "2026-09-21T22:37:19.656Z"
+}

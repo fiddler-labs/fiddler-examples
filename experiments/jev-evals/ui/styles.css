@@ -1,0 +1,531 @@
+:root {
+  --bg: #0f1115; --panel: #171a21; --line: #272b35; --text: #e6e8ee; --muted: #9aa3b2;
+  /* Severity ramp. Re-stepped so adjacent levels stay apart under colour-vision
+     deficiency: medium/high measured ΔE 5.8 (deutan) at the old values, and
+     high/critical only 10.1 for normal vision. These pass both. */
+  --low: #3fa66a; --medium: #e3c14a; --high: #e0743a; --critical: #c4304f;
+  --split: #e3c14a; --three: #c4304f; --unavailable: #6b7280;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* ---------- header: title and context, not operational counts ---------- */
+
+header { padding: 16px 18px 14px; border-bottom: 1px solid var(--line);
+  display: flex; gap: 18px; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; }
+.titles { min-width: 0; }
+h1 { font-size: 17px; margin: 0 0 5px; font-weight: 600; letter-spacing: -.01em; }
+@media (max-width: 1100px) { h1 .subtitle { display: none; } }
+.context { margin: 0; color: var(--muted); max-width: 72ch; }
+.caveat { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+.caveat b { color: var(--text); font-weight: 600; }
+.header-controls { display: flex; gap: 10px; align-items: center; }
+.switch { display: inline-flex; }
+.switch button { border-radius: 0; }
+.switch button:first-child { border-radius: 4px 0 0 4px; }
+.switch button:last-child { border-radius: 0 4px 4px 0; border-left: 0; }
+
+h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted);
+  border-bottom: 1px solid var(--line); padding-bottom: 6px; margin: 0 0 10px;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+h3 { font-size: 12px; color: var(--muted); margin: 18px 0 6px; text-transform: uppercase;
+  letter-spacing: .07em; }
+.muted { color: var(--muted); }
+
+button, select, input { background: var(--panel); color: var(--text); border: 1px solid var(--line);
+  border-radius: 4px; padding: 4px 8px; font: inherit; }
+button { cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button.active, button[aria-expanded="true"] { border-color: var(--text); }
+:focus-visible { outline: 1px solid var(--text); outline-offset: 1px; }
+
+.banner { margin: 12px 18px 0; padding: 8px 11px; border: 1px solid var(--split);
+  border-left-width: 3px; color: var(--split); border-radius: 4px; }
+.banner[hidden] { display: none; }
+
+/* ---------- compact summary ---------- */
+
+.sumstrip { --sum-pad: 22px; padding: 18px var(--sum-pad) 16px;
+  border-bottom: 1px solid var(--line); background: #12141a;
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 16px 38px; align-items: start; }
+/* One heading over the whole strip; the three blocks below are its columns. */
+/* A section heading, not a bold line of body text: bigger than the column
+   labels under it, with a rule across the strip it introduces. */
+.sum-head { grid-column: 1 / -1; font-size: 15px; color: var(--text);
+  text-transform: none; letter-spacing: -.01em; font-weight: 600;
+  border-bottom: 1px solid var(--line);
+  justify-content: space-between; gap: 12px;
+  /* The rule runs the full width of the strip, so the heading cancels the
+     section's side padding and re-applies it to its own text. */
+  margin: 0 calc(var(--sum-pad) * -1) 4px;
+  padding: 0 var(--sum-pad) 10px; }
+.sum-head .muted { font-weight: 400; font-size: 12px; letter-spacing: 0; }
+.sumblock { min-width: 0; }
+.sumblock .lab { color: var(--muted); font-size: 12px; text-transform: uppercase;
+  letter-spacing: .08em; margin-bottom: 10px; }
+.sumrow { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; font-size: 13px; }
+.sumrow .who { width: 10.5rem; flex: none; color: var(--text); font-size: 12px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The bar grows into the column rather than sitting at a fixed width. */
+.sumrow .bar { flex: 1 1 auto; min-width: 80px; }
+.sumrow .num { color: var(--muted); font-size: 12px; white-space: nowrap; flex: none;
+  font-variant-numeric: tabular-nums; text-align: right; min-width: 4.6rem; }
+/* A 2px surface gap between segments, so two adjacent fills never read as one. */
+.bar { height: 16px; background: var(--line); border-radius: 3px; overflow: hidden;
+  display: flex; gap: 2px; }
+/* The fill is set per level rather than inherited: the dark count text needs
+   its own `color`, which would otherwise take `currentColor` with it. */
+.bar i { display: grid; place-items: center; height: 100%; min-width: 3px;
+  font-size: 11px; font-weight: 700; color: #0f1115; }
+.bar i.low { background: var(--low); }
+.bar i.medium { background: var(--medium); }
+.bar i.high { background: var(--high); }
+/* Dark ink reads on the three lighter fills; the critical red needs light ink. */
+.bar i.critical { background: var(--critical); color: #fff; }
+.bar i.rp-stable { background: var(--low); }
+.bar i.rp-changed { background: repeating-linear-gradient(135deg, var(--split) 0 5px, #b98f26 5px 10px); }
+/* Response time: a bar so the spread is visible, not four numbers to compare by eye. */
+.sumrow .lat { flex: 1 1 auto; min-width: 60px; height: 16px; background: var(--line);
+  border-radius: 3px; overflow: hidden; display: flex; }
+.sumrow .lat i { display: block; height: 100%; background: var(--muted); border-radius: 3px; }
+/* Agreement bar: colour, an inline count, and a fill pattern per band, so the
+   distinction survives without colour. */
+.landed { min-width: 0; }
+.landed-bar { display: flex; height: 28px; border-radius: 3px; overflow: hidden;
+  background: var(--line); margin-bottom: 10px; }
+.landed-bar .seg { display: grid; place-items: center; min-width: 4px;
+  font-size: 12px; font-weight: 700; color: #0f1115; }
+.landed-bar .seg.unanimous { background: var(--low); }
+.landed-bar .seg.split { background: repeating-linear-gradient(135deg,
+  var(--medium) 0 5px, #b98f26 5px 10px); }
+.landed-bar .seg.three_way { background: repeating-linear-gradient(90deg,
+  var(--critical) 0 2px, #b13a35 2px 4px); }
+
+.landed-key { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.landed-key li { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
+.landed-key b { font-weight: 700; min-width: 1.6rem; text-align: right; }
+.sw { width: 13px; height: 13px; border-radius: 2px; flex: none; }
+.sw.unanimous { background: var(--low); }
+.sw.split { background: repeating-linear-gradient(135deg, var(--medium) 0 3px, #b98f26 3px 6px); }
+.sw.three_way { background: repeating-linear-gradient(90deg, var(--critical) 0 2px, #b13a35 2px 4px); }
+.note { color: var(--muted); font-size: 12px; max-width: 46ch; margin: 7px 0 0; }
+/* The exact-figures disclosure: a bordered, full-width row so it reads as a
+   section of the summary rather than a stray footnote. */
+.sumstrip details { margin: 0; border: 1px solid var(--line); border-radius: 6px;
+  padding: 0 12px; background: rgba(255, 255, 255, .015); }
+.sumstrip details[open] { padding-bottom: 6px; }
+.sumstrip summary { font-size: 13px; font-weight: 600; color: var(--text);
+  padding: 10px 0; list-style: none; display: flex; align-items: center; gap: 8px; }
+.sumstrip summary::-webkit-details-marker { display: none; }
+.sumstrip summary::before { content: ''; width: 0; height: 0;
+  border-left: 6px solid var(--muted); border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent; transition: transform .15s; }
+.sumstrip details[open] summary::before { transform: rotate(90deg); }
+.sumstrip summary .hint { font-weight: 400; font-size: 12px; color: var(--muted); }
+.sumstrip details[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+/* Level key for the distribution bars: a swatch and the word, since the bars
+   now carry counts rather than level initials. */
+.level-key { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px;
+  margin: 8px 0 0; padding: 0; font-size: 12px; color: var(--muted); }
+.level-key li { display: flex; align-items: center; gap: 5px; }
+.sw.low { background: var(--low); }
+.sw.medium { background: var(--medium); }
+.sw.high { background: var(--high); }
+.sw.critical { background: var(--critical); }
+
+/* Exact figures get their own full-width row; their tables must not widen it. */
+.sumstrip .figures { grid-column: 1 / -1; min-width: 0; }
+.sumstrip .figures details + details { margin-top: 8px; }
+/* Evaluator definitions: the four levels as a list with the level swatch. */
+.defs .lab { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+  margin: 4px 0 8px; }
+.defs .lab code.id { text-transform: none; letter-spacing: 0; }
+.ev-cards { list-style: none; margin: 10px 0 18px; padding: 0; display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); max-width: 960px; }
+.ev-card { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 12px;
+  background: rgba(255, 255, 255, .015); }
+.ev-card .ev-name { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ev-card .ev-name b { font-weight: 600; font-size: 13px; }
+.ev-card .ev-kind { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.ev-card > code.id { display: block; margin: 2px 0 8px; }
+.ev-card dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; margin: 0; }
+.ev-card dt { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.ev-card dd { margin: 0; line-height: 1.45; }
+.ev-card dd code { font-size: 11px; }
+.ev-card .muted { color: var(--muted); }
+.defs-col { max-width: 960px; }
+.level-cards { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.level-card { border: 1px solid var(--line); border-radius: 6px; padding: 9px 12px 10px; font-size: 12px;
+  background: rgba(255, 255, 255, .015); }
+.level-card .level-name { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+.level-card .level-name b { font-weight: 600; font-size: 13px; }
+.level-card p { margin: 0; color: var(--text); line-height: 1.5; }
+.defs .note { max-width: 80ch; margin: 0 0 14px; line-height: 1.5; }
+.defs .note b { color: var(--text); font-weight: 600; }
+.defs .prompt-text { margin-top: 4px; }
+.defs .prompt-text > summary { color: var(--text); font-size: 12px; cursor: pointer; }
+.defs .prompt-text pre { margin: 8px 0 0; font-size: 11px; line-height: 1.55; white-space: pre-wrap;
+  max-height: 28rem; overflow: auto; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.sumstrip .figures details details summary { font-size: 12px; font-weight: 500; }
+.sumstrip table { width: 100%; table-layout: fixed; }
+.sumstrip th, .sumstrip td { overflow-wrap: anywhere; }
+
+/* The figures tables: one line per row, numbers aligned down their column. */
+.figtable { table-layout: auto; font-size: 12px; margin-bottom: 16px; }
+.figtable caption { caption-side: top; text-align: left; color: var(--muted);
+  font-size: 11px; padding: 0 0 5px; }
+.figtable th, .figtable td { padding: 6px 9px; vertical-align: middle; }
+.figtable tr:nth-child(even) td { background: rgba(255, 255, 255, .02); }
+.figtable td b { font-weight: 600; }
+.figtable .fig { text-align: right; font-variant-numeric: tabular-nums;
+  white-space: nowrap; }
+/* Level counts read as one line: a swatch, then its count. */
+.figtable .levels { white-space: nowrap; }
+.figtable .lv { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px;
+  font-variant-numeric: tabular-nums; }
+.figtable .lv .sw { width: 9px; height: 9px; }
+.figtable .pairbar { width: 34%; }
+.figtable .pairbar .bar { height: 8px; }
+/* Agreement is not a risk level, so it does not borrow a level colour. */
+.figtable .pairbar i.pct { background: var(--muted); border-radius: 3px; }
+
+/* ---------- three panes ---------- */
+
+/* Same section-heading treatment as .sum-head, so the two strips read alike. */
+.explore-head { --sum-pad: 22px; padding: 16px var(--sum-pad) 0; }
+.explore-head h2 { font-size: 15px; color: var(--text); text-transform: none;
+  letter-spacing: -.01em; font-weight: 600;
+  /* Like .sum-head: the rule spans edge to edge, so the heading cancels the
+     section's side padding and re-applies it to its own text. */
+  margin: 0 calc(var(--sum-pad) * -1); padding: 0 var(--sum-pad) 10px;
+  border-bottom: 1px solid var(--line); }
+
+.panes { display: grid; grid-template-columns: 290px 300px minmax(0, 1fr); font-size: 12px; }
+.pane { overflow-y: auto; padding: 12px; min-width: 0; }
+.pane-scenarios, .pane-spans { border-right: 1px solid var(--line); }
+.pane-detail { padding: 16px 20px 60px; }
+
+#filter { width: 100%; margin-bottom: 8px; }
+.opt { display: block; margin-bottom: 10px; font-size: 11px; line-height: 1.35; }
+.legend { font-size: 10px; letter-spacing: .04em; text-transform: none; color: var(--muted); }
+
+.row { padding: 6px 8px; border: 1px solid transparent; border-radius: 4px; cursor: pointer; }
+.row:hover { background: var(--panel); }
+.row[aria-selected="true"] { background: var(--panel); border-color: var(--line); }
+.count { margin: 0 0 6px 8px; font-size: 11px; }
+.row .sub { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+/* scenario rows: title on the left, then one narrow column per count */
+.row.scenario { display: grid; grid-template-columns: minmax(0, 1fr) 1.4rem 1.4rem; gap: 6px;
+  align-items: baseline; padding: 5px 8px; }
+/* Smaller, tighter type so most titles fit on one or two lines in the column. */
+.row.scenario .name { min-width: 0; font-size: 11px; line-height: 1.35; }
+.row.scenario .n { font-size: 10px; color: var(--muted); text-align: right;
+  font-variant-numeric: tabular-nums; }
+/* The contested count keeps its colour, which the heading's second word names. */
+.row.scenario .n.split { color: var(--split); }
+
+/* span rows: command plus one comparison glyph */
+.row.span { display: grid; grid-template-columns: minmax(0, 1fr) 0.8rem auto; gap: 8px;
+  align-items: center; }
+.row.span .cmd { display: block; min-width: 0; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.row.span .flag { color: var(--high); font-size: 12px; text-align: center; }
+
+/* The glyph carries level by colour AND by letter, so hue is never the only channel. */
+.glyph { display: inline-flex; gap: 2px; }
+.glyph b { width: 17px; height: 17px; border-radius: 2px; display: grid; place-items: center;
+  font-size: 10px; font-weight: 700; border: 1px solid currentColor; }
+.glyph b.low { color: var(--low); } .glyph b.medium { color: var(--medium); }
+.glyph b.high { color: var(--high); } .glyph b.critical { color: var(--critical); }
+.glyph b.none { color: var(--unavailable); }
+
+/* ---------- detail ---------- */
+
+/* The task the agent was given, above the command it chose in response. */
+.task { border-left: 3px solid var(--muted); padding: 2px 0 2px 12px; margin: 14px 0 6px; }
+.task .lab { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 3px; }
+.task-title { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.task-prompt { margin: 0; color: var(--text); line-height: 1.55; max-width: 90ch;
+  white-space: pre-wrap; }
+
+.detail-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap;
+  border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 14px; }
+.detail-head h2 { border: 0; margin: 0; padding: 0; text-transform: none; letter-spacing: 0;
+  font-size: 13px; color: var(--text); display: block; }
+
+pre { background: #0b0d11; border: 1px solid var(--line); border-radius: 4px; padding: 9px 10px;
+  overflow-x: auto; margin: 4px 0 12px; white-space: pre-wrap; word-break: break-word; }
+pre.cmd { font-size: 12px; line-height: 1.7; }
+
+details { margin-bottom: 12px; }
+summary { cursor: pointer; color: var(--muted); padding: 4px 0; }
+summary:hover { color: var(--text); }
+details.evidence { border: 1px solid var(--line); border-radius: 6px; padding: 8px 11px;
+  margin-top: 22px; }
+details.evidence + details.evidence { margin-top: 10px; }
+details.evidence > summary { color: var(--text); }
+
+table { border-collapse: collapse; width: 100%; margin-bottom: 12px; }
+th, td { border: 1px solid var(--line); padding: 5px 8px; text-align: left; vertical-align: top; }
+th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+td { overflow-wrap: anywhere; }
+
+.pill { padding: 1px 7px; border-radius: 999px; font-size: 11px; border: 1px solid currentColor; }
+.low { color: var(--low); } .medium { color: var(--medium); }
+.high { color: var(--high); } .critical { color: var(--critical); }
+.unanimous { color: var(--low); } .split { color: var(--split); }
+.three_way { color: var(--three); } .incomplete { color: var(--unavailable); }
+.unavailable { color: var(--unavailable); font-style: italic; }
+
+/* ratings: the thing the page is about */
+.ratings { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.rating { border: 1px solid var(--line); border-radius: 6px; padding: 11px 12px; background: #0b0d11;
+  min-width: 0; }
+.rating .who { color: var(--muted); font-size: 11px; margin: 0 0 6px; display: flex;
+  justify-content: space-between; gap: 8px; align-items: baseline; }
+.rating .who .lat { margin: 0; font-variant-numeric: tabular-nums; }
+.rating .probbar { height: 14px; margin: 0 0 4px; }
+.rating .probbar i { font-size: 10px; }
+.rating .level { font-size: 14px; font-weight: 700; margin: 0 0 8px; letter-spacing: .01em; }
+.rating .why { margin: 0; }
+.rating .lat { color: var(--muted); font-size: 11px; margin: 9px 0 0; }
+.rating .probs { color: var(--muted); font-size: 11px; margin: 0 0 8px; }
+
+code.id { color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.empty { color: var(--muted); font-style: italic; }
+.kv { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 2px 8px; font-size: 11px; }
+.kv span { min-width: 0; overflow-wrap: anywhere; }
+
+/* ---------- responsive ---------- */
+
+/* Wide screens: one scrollbar, the page's. The detail pane grows with its
+   content, while the two list panes pin to the top of the viewport and scroll
+   on their own only when they are taller than it. The column rules are drawn
+   on the grid so they run the full height even though the pinned panes don't. */
+@media (min-width: 1101px) {
+  .panes { background-image: linear-gradient(var(--line), var(--line)),
+    linear-gradient(var(--line), var(--line));
+    background-size: 1px 100%, 1px 100%; background-repeat: no-repeat;
+    background-position: 289px 0, 589px 0; }
+  .pane-scenarios, .pane-spans { position: sticky; top: 0; align-self: start;
+    max-height: 100vh; border-right: 0; }
+  .pane-detail { overflow: visible; }
+}
+/* ---------------- repeatability view ----------------
+   A separate page behind its own tab. It reuses the bar and key primitives from
+   the summary so the two views read alike, and adds no colour-only meaning:
+   every bar is mirrored by a printed count, every cell by its rating sequence. */
+.repeat-wrap { padding: 12px 22px 40px; }
+.repeat-wrap h3 { margin: 26px 0 10px; font-size: 14px; }
+.repeat-wrap .context { margin: 0 0 14px; max-width: 70ch; }
+.repeat-wrap .note { max-width: 90ch; }
+
+/* The setup, as figures. */
+.rp-facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.rp-fact { display: flex; align-items: baseline; gap: 7px; padding: 6px 12px;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--panel); font-size: 12px;
+  color: var(--muted); }
+.rp-fact b { font-size: 16px; font-weight: 600; color: var(--text);
+  font-variant-numeric: tabular-nums; }
+.rp-fact span { color: var(--muted); font-size: 12px; }
+
+/* The limits, as four items rather than one paragraph. */
+/* Collapsed by default: one line of chrome instead of four lines of caveats. */
+.rp-limits { list-style: none; margin: 10px 0 4px; padding: 0; max-width: 940px; font-size: 12px;
+  color: var(--muted); display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 3px 30px; }
+.rp-limits b { color: var(--text); font-weight: 600; }
+
+.rp-cohort .sumrow .num { min-width: 6.4rem; }
+.rp-cohort .sumrow .num b { color: var(--text); font-weight: 600; }
+/* A header line over per-model rows: the same flex geometry as .sumrow, so each
+   label sits over its column. */
+.cols { display: flex; gap: 12px; margin-bottom: 4px; font-size: 11px; color: var(--muted); }
+.cols span { flex: none; min-width: 6.4rem; text-align: right; }
+/* A header that explains itself: dotted underline marks it, and the text in
+   data-tip appears at once on hover or keyboard focus, below the header. */
+.tip { position: relative; text-decoration: underline dotted; text-decoration-color: var(--muted);
+  text-underline-offset: 3px; cursor: help; }
+.tip::after { content: attr(data-tip); position: absolute; top: calc(100% + 6px); right: 0;
+  z-index: 20; width: max-content; max-width: 26ch; padding: 6px 9px; border-radius: 5px;
+  background: var(--text); color: var(--bg); font-size: 11px; font-weight: 400; line-height: 1.4;
+  text-align: left; text-transform: none; letter-spacing: 0; white-space: normal;
+  pointer-events: none; opacity: 0; transform: translateY(-3px);
+  transition: opacity .12s, transform .12s; }
+.tip:hover::after, .tip:focus-visible::after { opacity: 1; transform: none; }
+.tip:focus-visible { outline: 1px solid var(--muted); outline-offset: 2px; }
+/* A left-aligned header anchors its tooltip on the left. */
+th.tip:not(.fig)::after { right: auto; left: 0; }
+.cols span:first-child { width: 10.5rem; min-width: 0; }
+/* Five cells in one column: tighter gaps and a shorter name cell than the
+   default row, so the whole line fits without spilling into the next block. */
+.cols.axes, .sumrow.axes { gap: 8px; }
+.cols.axes span:first-child, .sumrow.axes .who { width: 8.5rem; }
+.cols.axes span:nth-child(2) { flex: 1 1 auto; min-width: 50px; }
+.cols.axes span:nth-child(n+3), .sumrow.axes .num { min-width: 4.2rem; }
+.cols.axes span:last-child, .sumrow.axes .words { min-width: 5.2rem; }
+.sumrow.axes .lat { min-width: 50px; }
+/* Pairwise agreement: folded under the landed key. Lighter than the exact-figures
+   disclosure, since it sits inside a block rather than being one. */
+.sumstrip details.pairs { margin-top: 10px; border: 0; padding: 0; background: none; }
+.sumstrip details.pairs summary { padding: 6px 0; font-weight: 500; font-size: 12px; }
+.sumstrip summary .sumlabel { white-space: nowrap; }
+.sumstrip details.pairs summary .hint { font-size: 11px; }
+.sumstrip details.pairs[open] summary { border-bottom: 0; margin-bottom: 6px; }
+.sumstrip details.pairs[open] { padding-bottom: 0; }
+.sumrow.pair .who { width: 9.5rem; }
+.sumrow.pair .lat i { background: var(--low); }
+.sumrow.pair .num b { color: var(--text); font-weight: 600; }
+.rp-chart { display: grid; gap: 10px; max-width: 760px; }
+.rp-row { display: grid; grid-template-columns: 170px minmax(0, 1fr) 110px;
+  align-items: center; gap: 12px; }
+.rp-row .who { font-size: 13px; }
+.rp-row .num { font-size: 13px; text-align: right; white-space: nowrap; }
+.rp-row .landed-bar { height: 22px; margin: 0; }
+/* Same two-tone convention as the summary: solid for the settled case, a
+   pattern for the unsettled one, so the pair survives greyscale. */
+.landed-bar .seg.rp-stable { background: var(--low); }
+.landed-bar .seg.rp-changed { background: repeating-linear-gradient(135deg,
+  var(--split) 0 3px, #b98f26 3px 6px); }
+.sw.rp-stable { background: var(--low); }
+.sw.rp-changed { background: repeating-linear-gradient(135deg, var(--split) 0 3px, #b98f26 3px 6px); }
+.rp-chart .landed-key { margin-top: 2px; }
+
+.rp-report { margin: 22px 0 6px; font-size: 13px; }
+
+.rp-table { width: 100%; margin: 6px 0 4px; }
+.rp-table caption { text-align: left; caption-side: bottom; padding-top: 6px; }
+.rp-table th[scope="row"] { font-weight: 400; vertical-align: top; }
+/* ---- matrix ----
+   One row per command, three cells per model. The letter in each cell is the
+   rating, so the grid is readable without colour; the tint only reinforces it.
+   A model whose three ratings differ is outlined as a group, which replaces a
+   per-cell tag repeated 93 times. */
+.rp-scroll { overflow-x: auto; max-width: 100%; }
+.rp-matrix { width: 100%; min-width: 660px; border-collapse: collapse; }
+.rp-matrix caption { text-align: left; caption-side: bottom; padding-top: 8px; }
+.rp-matrix thead th { text-align: left; vertical-align: bottom; padding: 4px 8px; }
+.rp-group-head .sub { display: block; font-weight: 400; }
+.rp-matrix tbody th[scope="row"] { font-weight: 400; padding: 0; width: 46%; }
+
+.rp-toggle { display: flex; align-items: center; gap: 6px; width: 100%; padding: 3px 6px;
+  background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  border-radius: 3px; }
+.rp-toggle:hover { background: var(--hover, rgba(255, 255, 255, .05)); }
+.rp-toggle code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rp-caret { flex: none; width: 1em; }
+
+.rp-group { padding: 3px 8px; white-space: nowrap; }
+/* The outline is the group-level signal; the spoken label carries the same fact. */
+.rp-group.changed { outline: 1px solid var(--split); outline-offset: -2px; border-radius: 4px; }
+.rp-cell { display: inline-grid; place-items: center; width: 21px; height: 21px;
+  margin-right: 2px; border-radius: 3px; font-size: 11px; font-weight: 700;
+  font-style: normal; color: #0d0f12; }
+.rp-cell.low { background: var(--low); }
+.rp-cell.medium { background: var(--medium); }
+.rp-cell.high { background: var(--high); }
+.rp-cell.critical { background: var(--critical); }
+
+.rp-mrow.open { background: rgba(255, 255, 255, .03); }
+.rp-exprow > td { padding: 0 0 14px; }
+
+/* The expanded command: a boxed panel with the command on top, one card per
+   model side by side, and a single footer line of provenance. */
+.rp-exp { border: 1px solid var(--line); border-radius: 6px; background: var(--panel);
+  padding: 12px 14px 10px; }
+.rp-exp .cmd { white-space: pre-wrap; margin: 0 0 12px; background: var(--bg); }
+.rp-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.rp-card { border: 1px solid var(--line); border-radius: 6px; background: var(--bg);
+  display: flex; flex-direction: column; min-width: 0; }
+.rp-card.changed { border-color: var(--split); }
+.rp-card > header { display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.rp-card h4 { margin: 0; font-size: 13px; font-weight: 700; }
+.rp-tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor;
+  white-space: nowrap; }
+.rp-tag.same { color: var(--low); }
+.rp-tag.changed { color: var(--split); }
+.rp-card-body { padding: 4px 12px 6px; flex: 1; }
+.rp-card-foot { padding: 7px 12px; border-top: 1px solid var(--line); font-size: 11px;
+  color: var(--muted); }
+.rp-card-foot b { color: var(--text); font-weight: 600; }
+
+/* One observation: label, then the rating line, then its rationale. */
+.rp-run { padding: 7px 0; font-size: 12px; }
+.rp-run + .rp-run { border-top: 1px dashed var(--line); }
+.rp-when { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 3px; }
+.rp-what { display: flex; gap: 8px; align-items: center; }
+.rp-what .rp-cell { width: 18px; height: 18px; font-size: 10px; margin: 0; }
+.rp-prob { font-variant-numeric: tabular-nums; color: var(--muted); }
+.rp-why { margin: 5px 0 0; line-height: 1.5; color: var(--text); }
+
+.rp-exp-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px;
+  margin-top: 12px; font-size: 12px; }
+.rp-exp-foot .muted { margin-right: 4px; }
+.rp-open { margin-left: auto; font: inherit; font-size: 12px; padding: 4px 10px;
+  border-radius: 4px; border: 1px solid var(--line); background: var(--bg); color: var(--text);
+  cursor: pointer; }
+.rp-open:hover { border-color: var(--muted); }
+
+/* The heading and its filter on one line above the matrix. */
+.rp-matrix-head { display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; }
+.rp-matrix-head h3 { margin: 26px 0 10px; }
+.rp-matrix-head .opt { margin: 0 0 6px; }
+/* The two secondary tables, collapsed under the matrix. */
+
+.rp-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 16px;
+  margin: 10px 0 0; padding: 0; font-size: 13px; }
+.rp-legend li { display: flex; align-items: center; gap: 6px; }
+.rp-legend-changed .rp-group.changed { padding: 2px 3px; }
+
+@media (max-width: 720px) {
+  .repeat-wrap { padding: 14px; }
+  .rp-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .rp-row .num { text-align: left; }
+  /* Four columns will not fit a phone; scroll the table, not the page. */
+  /* The matrix keeps its own horizontal scroll rather than being crushed. */
+  .rp-matrix { min-width: 600px; }
+  .rp-matrix tbody th[scope="row"] { width: 40%; }
+}
+@media (max-width: 1000px) {
+  .rp-cards { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 1100px) {
+  .sumstrip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 30px; }
+  .panes { grid-template-columns: 230px minmax(0, 1fr); }
+  .pane-detail { grid-column: 1 / -1; border-top: 1px solid var(--line); }
+  .pane { max-height: 60vh; }
+  .pane-detail { max-height: none; }
+}
+@media (max-width: 720px) {
+  table { table-layout: fixed; }
+  th { white-space: normal; }
+  th, td { overflow-wrap: anywhere; }
+  /* Eight columns cannot fit a phone: let the figures scroll rather than be
+     crushed one character per line. The container scrolls, the page does not. */
+  .sumstrip .figures { overflow-x: auto; }
+  .sumstrip table { table-layout: auto; min-width: 560px; }
+  .sumstrip th { white-space: nowrap; }
+  .panes { display: block; }
+  .pane { max-height: none; border-right: 0; border-bottom: 1px solid var(--line); }
+  .pane-scenarios, .pane-spans { max-height: 34vh; }
+  .ratings { grid-template-columns: 1fr; }
+  .sumstrip { --sum-pad: 14px; grid-template-columns: minmax(0, 1fr); gap: 18px;
+    padding: 14px var(--sum-pad); }
+  header { padding: 14px; }
+}
+
+/* The shared prompt sits inside the rubric panel; the <pre> is its own frame,
+   so the disclosure itself stays flat like the pair-by-pair one. */
+.sumstrip details.prompt-text { border: 0; padding: 0; background: none; margin: 0; }
+.sumstrip details.prompt-text > summary { padding: 6px 0; font-weight: 500; }
+.sumstrip details.prompt-text[open] > summary { border-bottom: 0; margin-bottom: 0; }
