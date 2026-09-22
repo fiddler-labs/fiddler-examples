@@ -481,9 +481,12 @@ th.tip:not(.fig)::after { right: auto; left: 0; }
 .rp-matrix-head .opt { margin: 0 0 6px; }
 /* The two secondary tables, collapsed under the matrix. */
 
-.rp-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 16px;
-  margin: 10px 0 0; padding: 0; font-size: 13px; }
-.rp-legend li { display: flex; align-items: center; gap: 6px; }
+.rp-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 24px;
+  margin: 12px 0 16px; padding: 0; font-size: 13px; }
+.rp-legend li { display: flex; align-items: center; gap: 8px; }
+/* The outlined entry explains a different signal from the four levels, so it
+   sits apart from them rather than reading as a fifth level. */
+.rp-legend-changed { margin-left: 8px; padding-left: 24px; border-left: 1px solid var(--line); }
 .rp-legend-changed .rp-group.changed { padding: 2px 3px; }
 
 @media (max-width: 720px) {
