@@ -45,6 +45,13 @@ Use-case oriented notebooks that demonstrate end-to-end workflows for solving re
 * [RAG Experiments at Scale](https://github.com/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_RAG_Experiments_at_Scale.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_RAG_Experiments_at_Scale.ipynb) — Compare RAG pipeline configurations systematically
 * [Custom Judge Evaluators](https://github.com/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_Custom_Judge_Evaluators.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fiddler-labs/fiddler-examples/blob/main/cookbooks/Fiddler_Cookbook_Custom_Judge_Evaluators.ipynb) — Create domain-specific evaluation criteria
 
+## Experiments
+
+Standalone studies that use Fiddler's evaluation thinking without the Fiddler platform. Each
+folder is a self-contained project with its own README.
+
+* [jev-evals](https://github.com/fiddler-labs/fiddler-examples/tree/main/experiments/jev-evals) — Do three AI Gateway models agree on how risky a coding agent's shell commands are? The GitHub Copilot CLI works fabricated tasks in disposable Vercel Sandboxes; Jev, Gemini 3.5 Flash Lite and GPT-5.4 nano rate every captured Bash command against one rubric. [Explore the results](https://jev-evals.vercel.app).
+
 ## Fiddler Utils — Admin Automation Library
 
 `fiddler-utils` is an admin automation library for Fiddler that provides

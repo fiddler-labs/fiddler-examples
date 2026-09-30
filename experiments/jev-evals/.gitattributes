@@ -1,0 +1,7 @@
+# This example is a Node project: its package.json, lockfile, rubric and
+# ~12 MB of JSONL artifacts must be plain git files, not LFS pointers, or a
+# clone without git-lfs cannot install, test or run the UI. Override the
+# repo-wide LFS rules for these types here.
+*.json  -filter -diff -merge text
+*.jsonl -filter -diff -merge text
+*.png   -filter -diff -merge

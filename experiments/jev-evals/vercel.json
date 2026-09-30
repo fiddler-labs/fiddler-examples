@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run ui:build",
+  "outputDirectory": "ui/dist",
+  "framework": null,
+  "headers": [
+    { "source": "/repeat-report.txt", "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }] }
+  ]
+}

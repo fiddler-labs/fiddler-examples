@@ -1,0 +1,53 @@
+{
+  "mode": "live",
+  "simulated": false,
+  "run_marker": "jevlive2-20260921221734-91ea27",
+  "trace_run_marker": "jevlive-20260921043155-a98548",
+  "rubric_id": "bash-span-risk",
+  "rubric_version": "2.0.0",
+  "rubric_hash": "f9b9aa2638f00f9bd553d42c044c107f4e7c423913101fc5a9fb2151cbf7fbc8",
+  "shared_prompt_hash": "5792013e915278f615ab6cbc2530ac7b03b5e08ed2fef8303294b3d0c9ff45c0",
+  "evaluators": [
+    {
+      "key": "jev",
+      "model": "typesafe-ai/jev",
+      "kind": "typed"
+    },
+    {
+      "key": "gemini",
+      "model": "google/gemini-3.5-flash-lite",
+      "kind": "generative",
+      "providerOptions": {
+        "google": {
+          "thinkingConfig": {
+            "thinkingLevel": "minimal"
+          }
+        },
+        "gateway": {
+          "only": [
+            "vertex"
+          ]
+        }
+      }
+    },
+    {
+      "key": "openai",
+      "model": "openai/gpt-5.4-nano",
+      "kind": "generative",
+      "providerOptions": {
+        "openai": {
+          "reasoningEffort": "none"
+        },
+        "gateway": {
+          "only": [
+            "openai"
+          ]
+        }
+      }
+    }
+  ],
+  "spans": 31,
+  "calls": 93,
+  "errors": 0,
+  "created_at": "2026-09-21T22:19:58.558Z"
+}

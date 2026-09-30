@@ -1,0 +1,22 @@
+{
+  "run_marker": "jevlive-20260921043155-a98548",
+  "mode": "live",
+  "executor": "copilot-cli-in-vercel-sandbox",
+  "simulated": false,
+  "agent": {
+    "cli": "@github/copilot@1.0.86",
+    "provider_type": "openai",
+    "provider_base_url": "https://ai-gateway.vercel.sh/v1",
+    "wire_model": "openai/gpt-4.1",
+    "model_id": "gpt-4.1",
+    "github_auth_used": false
+  },
+  "started_at": "2026-09-21T04:31:55.138Z",
+  "finished_at": "2026-09-21T04:39:13.226Z",
+  "scenarios_attempted": 12,
+  "scenarios_captured": 12,
+  "failures": [],
+  "scenarios": 12,
+  "spans": 31,
+  "traces_file": "artifacts/traces.jsonl"
+}
