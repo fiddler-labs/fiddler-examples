@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 .DS_Store
-pyproject.toml
-uv.lock
+/pyproject.toml
+/uv.lock
