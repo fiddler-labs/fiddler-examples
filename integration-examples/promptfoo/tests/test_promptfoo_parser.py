@@ -22,15 +22,18 @@ def test_categorizes_plugins():
 
     assert by_plugin["pii:direct"].category == "pii"
     assert by_plugin["pii:session"].category == "pii"
-    assert by_plugin["medical:anchoring-bias"].category == "phi"
-    assert by_plugin["medical:fda:cyber-access-control"].category == "phi"
+    # medical:* plugins test bad medical advice, not PHI leakage, so they
+    # are deliberately left unmapped.
+    assert by_plugin["medical:anchoring-bias"].category == "other"
+    assert by_plugin["medical:fda:cyber-access-control"].category == "other"
     assert by_plugin["harmful:hate"].category == "safety"
     assert by_plugin["harmful:cybercrime"].category == "safety"
 
 
-def test_should_flag_true_for_adversarial_categories():
+def test_should_flag_only_for_mapped_categories():
     cases = load_redteam_cases(FIXTURE)
-    assert all(case.should_flag for case in cases)
+    assert all(case.should_flag for case in cases if case.category != "other")
+    assert not any(case.should_flag for case in cases if case.category == "other")
 
 
 def test_severity_and_metric_captured():

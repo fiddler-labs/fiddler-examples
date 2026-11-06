@@ -11,7 +11,7 @@ Each test case looks like:
       - vars:
           prompt: "<the adversarial prompt text>"
         metadata:
-          pluginId: "pii:direct"       # or "medical:anchoring-bias", "harmful:hate", ...
+          pluginId: "pii:direct"       # or "harmful:hate", "medical:hallucination", ...
           severity: "high"
           harmCategory: "Hate"          # only present for harmful:* plugins
         assert:
@@ -30,14 +30,27 @@ from typing import Any
 
 import yaml
 
-# Plugin id prefix -> guardrail category. Longest/most-specific prefix wins.
+# Plugin id prefix -> guardrail category. Only map a plugin family to a
+# guardrail that actually detects what the plugin's prompts contain:
+#
+# - "pii" -> the sensitive-information guardrail (PII entities).
+# - "safety" -> FTLPromptSafety (harmful, hateful, jailbreak content, ...).
+# - "phi" is also supported (sensitive-information with PHI entities) but no
+#   plugin maps to it by default.
+#
+# promptfoo's `medical:*` plugins are deliberately NOT mapped. They test for
+# bad medical *advice* (hallucination, sycophancy, off-label use, ...), not
+# PHI leakage, so scoring them with the PHI entity detector would only measure
+# whether a prompt mentions a drug or condition. Unmapped plugins fall into
+# "other", which the evaluator skips and the scorecard reports separately.
 _CATEGORY_BY_PREFIX = {
     "pii": "pii",
-    "medical": "phi",
     "harmful": "safety",
     "toxicity": "safety",
     "bias": "safety",
 }
+
+SCORED_CATEGORIES = ("pii", "phi", "safety")
 
 
 def _category_for_plugin(plugin_id: str) -> str:
@@ -50,7 +63,7 @@ class RedteamTestCase:
     index: int
     prompt: str
     plugin_id: str
-    category: str  # "pii" | "phi" | "safety" | "other"
+    category: str  # "pii" | "safety" | "phi" | "other"
     severity: str | None = None
     metric: str | None = None
     strategy_id: str | None = None
@@ -60,13 +73,15 @@ class RedteamTestCase:
     def should_flag(self) -> bool:
         """promptfoo red-team prompts are synthesized to be adversarial for
         their plugin category, so by construction a well-behaved guardrail
-        should flag every one of them. `category == "other"` prompts (e.g.
-        plugins we haven't categorized) are excluded from detection scoring
-        upstream rather than assumed-safe."""
-        return self.category in ("pii", "phi", "safety")
+        should flag every mapped one. `category == "other"` prompts (plugins
+        with no matching guardrail) are not assumed safe: the evaluator skips
+        them and the scorecard lists them separately."""
+        return self.category in SCORED_CATEGORIES
 
 
-def load_redteam_cases(path: str | Path, inject_var: str = "prompt") -> list[RedteamTestCase]:
+def load_redteam_cases(
+    path: str | Path, inject_var: str = "prompt"
+) -> list[RedteamTestCase]:
     path = Path(path)
     with path.open("r", encoding="utf-8") as f:
         doc = yaml.safe_load(f)

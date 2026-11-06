@@ -5,9 +5,10 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
-load_dotenv()
+# Look for .env starting from the current working directory.
+load_dotenv(find_dotenv(usecwd=True))
 
 
 class ConfigError(RuntimeError):
@@ -22,10 +23,15 @@ class FiddlerSettings:
     application: str
 
     @classmethod
-    def from_env(cls) -> "FiddlerSettings":
+    def from_env(cls) -> FiddlerSettings:
         missing = [
             name
-            for name in ("FIDDLER_URL", "FIDDLER_API_KEY", "FIDDLER_PROJECT", "FIDDLER_APPLICATION")
+            for name in (
+                "FIDDLER_URL",
+                "FIDDLER_API_KEY",
+                "FIDDLER_PROJECT",
+                "FIDDLER_APPLICATION",
+            )
             if not os.environ.get(name)
         ]
         if missing:

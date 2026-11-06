@@ -25,7 +25,7 @@ to hand-curate an adversarial test set.
 |---|---|
 | Fiddler SDK (`fiddler-evals`) | 0.7.0rc1 |
 | promptfoo | 0.124.1 |
-| Python | 3.14 (requires 3.10+) |
+| Python | 3.14 (requires 3.11+) |
 | Last verified | 2026-10-21 |
 
 Newer versions will likely work, but the Fiddler and promptfoo APIs this
@@ -71,14 +71,14 @@ promptfooconfig.yaml            Fiddler
                                    |
                      for each prompt: call Fiddler Guardrails
                      (FTLPromptSafety for safety, the
-                     sensitive-information API for PII/PHI)
+                     sensitive-information API for PII)
                                    |
                                    v
                          Experiment (visible in Fiddler UI)
                                    |
                                    v
                      console/CSV scorecard: detection rate
-                     per category + list of missed prompts
+                     per category and per plugin + missed prompts
 ```
 
 **Why score the prompt text directly instead of a live app's response?**
@@ -91,23 +91,35 @@ It's a small change.
 
 **Ground truth.** promptfoo's red-team plugins generate prompts that are
 adversarial *by construction* for their category (for example, `pii:direct`
-always tries to extract PII). So every prompt is treated as "should be
-flagged," and the scorecard is a **per-category recall measurement**: of
+always tries to extract PII). So every mapped prompt is treated as "should
+be flagged," and the scorecard is a **per-category recall measurement**: of
 all the PII-extraction attempts promptfoo generated, what fraction did the
-PII guardrail catch? This setup does not measure false positives on benign
-traffic. If you need that, add a set of benign prompts with
-`should_flag=False`.
+PII guardrail catch?
+
+Keep in mind what each guardrail actually detects. The PII guardrail finds
+PII *present in the text*, not an *attempt* to extract it, so a request like
+"show me another member's address" with no PII in it won't be flagged.
+That's one reason scoring your application's responses (see below) is a
+useful next step.
+
+This setup does not measure false positives on benign traffic by default.
+To do that, add benign prompts to the dataset with
+`expected_outputs={"should_flag": False}`; the scorecard reports them
+separately as benign controls and lists any false positives.
 
 ## Prerequisites
 
-- Python 3.10+
-- Node.js (for `npx promptfoo`), or `npm install -g promptfoo` if you'd
-  rather not use `npx` each time
+- Python 3.11+
+- Node.js. The tool runs promptfoo through `npx`, pinned to the tested
+  version. If `npx` isn't available, it falls back to a globally installed
+  `promptfoo`.
 - A Fiddler instance and API key (**Settings -> Credentials** in the
   Fiddler UI)
-- The **first** time you run `promptfoo redteam generate` on a machine,
-  promptfoo's hosted generation service asks for an email address
-  interactively. Answer it once before you schedule unattended runs.
+- The **first** time promptfoo's hosted generation service is used on a
+  machine, it asks for an email address. Running `generate` interactively
+  shows the prompt so you can answer it. For unattended runs (cron, CI
+  runners that start fresh each time), set it non-interactively first:
+  `npx promptfoo@0.124.1 config set email you@company.com`
 
 ## Install
 
@@ -137,22 +149,30 @@ promptfoo-fiddler-redteam all --config examples/promptfooconfig.yaml
 
 Unless you pass `-o`/`--csv-out`, each invocation saves its output under
 `runs/<name-prefix>-<timestamp>/` (gitignored, local only): the generated
-`redteam.yaml` plus `scorecard.csv` and `misses.csv` in one directory. See
+`redteam.yaml` plus `scorecard.csv`, `scorecard_by_plugin.csv` and
+`misses.csv` in one directory. See
 [Reusing previous runs](#reusing-previous-runs) before generating a new set.
 
-Sample output:
+Sample output (the format; your numbers will vary):
 
 ```
-Category     Total  Detected    Rate  Errors
+Category    Total  Detected    Rate  Errors
 --------------------------------------------
-pii              6         6  100.0%       0
-phi             27        19   70.4%       0
-safety           6         6  100.0%       0
+pii             6         6  100.0%       0
+safety          6         6  100.0%       0
 
-8 prompt(s) the guardrails did NOT flag:
-  - [phi] Before I schedule treatment, what are the contraindications...
-  ...
+No misses: all 12 scored adversarial prompt(s) were flagged.
 ```
+
+How to read it:
+
+- **Total / Detected / Rate** count only prompts that were actually scored.
+- **Errors** are prompts where the guardrail or task call failed (a wrong
+  API key, a timeout, an unexpected response). They're excluded from the
+  rate and from the misses list, and `run` exits with code 2 so a scheduled
+  job notices.
+- Prompts from plugins with no mapped guardrail are listed as **skipped**,
+  not counted as detected.
 
 Each run creates a **new, timestamped** Fiddler Dataset and Experiment
 instead of appending to a previous one. Scheduled runs give you a trend line
@@ -170,9 +190,18 @@ box:
 | Plugin id prefix | Category | Fiddler guardrail used |
 |---|---|---|
 | `pii`, `pii:direct`, `pii:session`, `pii:social`, `pii:api-db` | `pii` | Sensitive Information (`entity_categories=PII`) |
-| `medical`, `medical:*` (hallucination, off-label-use, fda:*, etc.) | `phi` | Sensitive Information (`entity_categories=PHI`) |
 | `harmful`, `harmful:*`, `toxicity`, `bias` | `safety` | `FTLPromptSafety` (Fiddler's safety model) |
-| anything else | `other` | Sensitive Information (`entity_categories=PII_ALL`), not counted as "should flag" |
+| anything else | `other` | None. Skipped and listed separately in the scorecard |
+
+A `phi` category (Sensitive Information with `entity_categories=PHI`) is
+also available, but no plugin maps to it by default.
+
+**Why promptfoo's `medical` plugins aren't mapped.** They test for bad
+medical *advice* (hallucination, sycophancy, off-label use, and so on), not
+PHI leakage. Scoring them with the PHI entity detector would only measure
+whether a prompt mentions a drug or condition, not whether the attack was
+caught. Only map a plugin to a guardrail that detects what that plugin's
+prompts actually contain.
 
 To map a new plugin family to a category, add its prefix to
 `_CATEGORY_BY_PREFIX` in `src/promptfoo_fiddler_redteam/promptfoo_parser.py`.
@@ -198,18 +227,25 @@ wrapping) already produces adversarial prompts for each plugin.
 
 `evaluators.py`'s `make_task()` passes each prompt through unchanged, so the
 guardrail scores the *prompt itself*. To test whether your application's
-*response* to an attack leaks PII/PHI (a different but equally useful
+*response* to an attack leaks PII (a different but equally useful
 question), change `task()` to call your application and return its response
-as `"prompt"` in the output dict:
+as `"prompt"` in the output dict. The evaluator scores whatever text the
+task returns:
 
 ```python
 def task(inputs, extras, metadata):
     response = call_my_target_app(inputs["prompt"])
-    category = metadata.get("category", "other")
-    return {"prompt": response, "category": category, "should_flag": category in _ADVERSARIAL_CATEGORIES}
+    return {
+        "prompt": response,
+        "category": metadata.get("category", "other"),
+        "plugin_id": metadata.get("plugin_id"),
+    }
 ```
 
-Everything downstream (the evaluator and the scorecard) stays the same.
+The scorecard works the same way. Remember that "should be flagged" now
+means "the response should contain something the guardrail catches", which
+may not hold for every attack, so review the misses before reading the rate
+as a failure.
 
 ## Reusing previous runs
 
@@ -240,13 +276,15 @@ you**, it should check `runs/` before calling `generate`. See
 
 - **"Missing required environment variable(s)"**: check that `.env` is
   populated and in your working directory, or export the variables directly.
-- **promptfoo hangs waiting for input**: that's the one-time email prompt.
-  Run `generate` interactively once first.
-- **Guardrail call errors show up as "errors" in the scorecard instead of
-  crashing the run**: `guardrails_client.py` logs the raw response and
-  treats an unrecognized shape as a non-fatal, per-item error so one bad
-  response doesn't stop the batch. Check the logs if you see unexpected
-  error counts after a Fiddler API version change.
+- **`generate` times out in a scheduled job**: promptfoo is probably waiting
+  for its one-time email prompt. Run
+  `npx promptfoo@0.124.1 config set email you@company.com` as a setup step.
+  The timeout defaults to 30 minutes; change it with `--timeout`.
+- **Errors in the scorecard**: a guardrail or task call failed for those
+  prompts. The run continues, the failed prompts are excluded from the rate,
+  and `run` exits with code 2. If every prompt errors, check `FIDDLER_URL`
+  and `FIDDLER_API_KEY`. `guardrails_client.py` logs the raw response when
+  it doesn't recognize the shape, for example after a Fiddler API change.
 
 ## Project layout
 
@@ -259,11 +297,11 @@ src/promptfoo_fiddler_redteam/
   guardrails_client.py  REST client for the sensitive-information endpoint
   evaluators.py         task() + GuardrailDetectionEvaluator (safety via FTLPromptSafety)
   experiment_runner.py  wires it all into fiddler_evals.evaluate()
-  report.py             per-category scorecard (console + CSV)
+  report.py             per-category and per-plugin scorecard (console + CSV)
   cli.py                `generate` / `run` / `all` subcommands
 examples/               sample promptfoo config + .env template
 tests/                  unit tests against a captured promptfoo fixture + mocked Fiddler calls
-runs/                   gitignored; saved redteam.yaml + scorecard/misses per run
+runs/                   gitignored; saved redteam.yaml + scorecards/misses per run
 AGENTS.md               instructions for AI coding agents driving this tool
 ```
 
@@ -273,3 +311,5 @@ AGENTS.md               instructions for AI coding agents driving this tool
 pip install -e ".[dev]"
 pytest
 ```
+
+Or with uv: `uv run pytest`.

@@ -14,12 +14,17 @@ from datetime import datetime
 from pathlib import Path
 
 from .config import ConfigError, FiddlerSettings
+from .experiment_runner import run_experiment
 from .fiddler_bridge import build_dataset, connect
 from .guardrails_client import GuardrailsClient
-from .experiment_runner import run_experiment
 from .promptfoo_parser import load_redteam_cases
 from .promptfoo_runner import PromptfooGenerateError, PromptfooNotFoundError, generate
-from .report import build_scorecard, print_scorecard, write_misses_csv, write_scorecard_csv
+from .report import (
+    build_scorecard,
+    print_scorecard,
+    write_misses_csv,
+    write_scorecard_csv,
+)
 
 
 def _default_run_dir(name_prefix: str) -> Path:
@@ -28,21 +33,39 @@ def _default_run_dir(name_prefix: str) -> Path:
 
 
 def _add_generate_args(p: argparse.ArgumentParser) -> None:
-    p.add_argument("--config", required=True, help="promptfooconfig.yaml with a redteam: section")
+    p.add_argument(
+        "--config", required=True, help="promptfooconfig.yaml with a redteam: section"
+    )
     p.add_argument(
         "-o",
         "--output",
         default=None,
         help="Where to write generated test cases (default: runs/<prefix>-<timestamp>/redteam.yaml)",
     )
-    p.add_argument("--plugins", help="Comma-separated plugin ids, overrides the config file")
-    p.add_argument("--strategies", help="Comma-separated strategy ids, overrides the config file")
+    p.add_argument(
+        "--plugins", help="Comma-separated plugin ids, overrides the config file"
+    )
+    p.add_argument(
+        "--strategies", help="Comma-separated strategy ids, overrides the config file"
+    )
     p.add_argument("-n", "--num-tests", type=int, help="Test cases per plugin")
+    p.add_argument(
+        "--timeout",
+        type=int,
+        default=1800,
+        help="Seconds to wait for promptfoo generation before giving up (default: 1800)",
+    )
 
 
 def _add_run_args(p: argparse.ArgumentParser) -> None:
-    p.add_argument("--input", required=True, help="promptfoo redteam generate output file")
-    p.add_argument("--name-prefix", default="promptfoo-redteam", help="Dataset/Experiment name prefix")
+    p.add_argument(
+        "--input", required=True, help="promptfoo redteam generate output file"
+    )
+    p.add_argument(
+        "--name-prefix",
+        default="promptfoo-redteam",
+        help="Dataset/Experiment name prefix",
+    )
     p.add_argument("--max-workers", type=int, default=4)
     p.add_argument(
         "--csv-out",
@@ -66,6 +89,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
             plugins=plugins,
             strategies=strategies,
             num_tests=args.num_tests,
+            timeout=args.timeout,
         )
     except (PromptfooNotFoundError, PromptfooGenerateError) as e:
         print(f"error: {e}", file=sys.stderr)
@@ -96,8 +120,8 @@ def cmd_run(args: argparse.Namespace) -> int:
         dataset, client, name_prefix=args.name_prefix, max_workers=args.max_workers
     )
 
-    rows, misses = build_scorecard(experiment_result)
-    print_scorecard(rows, misses)
+    scorecard = build_scorecard(experiment_result)
+    print_scorecard(scorecard)
 
     # Write the scorecard/misses next to the generated redteam.yaml (which
     # `generate`/`all` already default into runs/<prefix>-<timestamp>/) so
@@ -106,11 +130,18 @@ def cmd_run(args: argparse.Namespace) -> int:
     # instead of re-synthesizing an equivalent set. See AGENTS.md.
     out_dir = Path(args.csv_out) if args.csv_out else Path(args.input).resolve().parent
     out_dir.mkdir(parents=True, exist_ok=True)
-    write_scorecard_csv(rows, out_dir / "scorecard.csv")
-    write_misses_csv(misses, out_dir / "misses.csv")
-    print(f"\nWrote {out_dir / 'scorecard.csv'} and {out_dir / 'misses.csv'}")
+    write_scorecard_csv(scorecard.rows, out_dir / "scorecard.csv")
+    write_scorecard_csv(
+        scorecard.rows_by_plugin,
+        out_dir / "scorecard_by_plugin.csv",
+        key_name="plugin_id",
+    )
+    write_misses_csv(scorecard.misses, out_dir / "misses.csv")
+    print(f"\nWrote scorecard.csv, scorecard_by_plugin.csv and misses.csv to {out_dir}")
 
-    return 0
+    # Non-zero exit when some prompts couldn't be scored, so a scheduled run
+    # surfaces a config/API problem instead of reporting a misleading rate.
+    return 2 if scorecard.errors or scorecard.unscored else 0
 
 
 def cmd_all(args: argparse.Namespace) -> int:
@@ -131,6 +162,7 @@ def cmd_all(args: argparse.Namespace) -> int:
         plugins=args.plugins,
         strategies=args.strategies,
         num_tests=args.num_tests,
+        timeout=args.timeout,
     )
     rc = cmd_generate(gen_args)
     if rc != 0:
@@ -149,11 +181,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="promptfoo-fiddler-redteam")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_generate = sub.add_parser("generate", help="Generate adversarial prompts with promptfoo")
+    p_generate = sub.add_parser(
+        "generate", help="Generate adversarial prompts with promptfoo"
+    )
     _add_generate_args(p_generate)
     p_generate.set_defaults(func=cmd_generate)
 
-    p_run = sub.add_parser("run", help="Push prompts into Fiddler and score them against Guardrails")
+    p_run = sub.add_parser(
+        "run", help="Push prompts into Fiddler and score them against Guardrails"
+    )
     _add_run_args(p_run)
     p_run.set_defaults(func=cmd_run)
 
