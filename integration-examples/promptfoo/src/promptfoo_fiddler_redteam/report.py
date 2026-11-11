@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from .evaluators import DETECTION_SCORE_NAME, GuardrailDetectionEvaluator
+from .resilience import error_hint
 
 EVALUATOR_NAME = GuardrailDetectionEvaluator.name
 
@@ -204,8 +205,8 @@ def print_scorecard(card: Scorecard) -> None:
     if card.errors:
         print(
             f"\n{len(card.errors)} prompt(s) could not be scored because the guardrail or task call "
-            "failed. They are excluded from the rates above. Check FIDDLER_URL / FIDDLER_API_KEY "
-            "and the logs. First error:"
+            f"failed. They are excluded from the rates above. {error_hint(card.errors[0]['reasoning'])} "
+            "First error:"
         )
         print(f"  {card.errors[0]['reasoning']}")
     if card.skipped:

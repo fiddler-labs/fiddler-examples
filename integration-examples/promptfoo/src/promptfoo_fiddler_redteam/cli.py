@@ -25,6 +25,7 @@ from .report import (
     write_misses_csv,
     write_scorecard_csv,
 )
+from .resilience import describe_fiddler_error
 
 
 def _default_run_dir(name_prefix: str) -> Path:
@@ -111,8 +112,12 @@ def cmd_run(args: argparse.Namespace) -> int:
         return 1
     print(f"Parsed {len(cases)} test case(s) from {args.input}")
 
-    application = connect(settings)
-    dataset = build_dataset(application, cases, name_prefix=args.name_prefix)
+    try:
+        application = connect(settings)
+        dataset = build_dataset(application, cases, name_prefix=args.name_prefix)
+    except Exception as e:  # noqa: BLE001 - report any setup failure as one readable line
+        print(f"error: {describe_fiddler_error(e, settings.url)}", file=sys.stderr)
+        return 1
     print(f"Created Fiddler dataset: {dataset.name}")
 
     client = GuardrailsClient(base_url=settings.url, api_key=settings.api_key)

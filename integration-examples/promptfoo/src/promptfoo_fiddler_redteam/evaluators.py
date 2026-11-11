@@ -25,6 +25,7 @@ from fiddler_evals import Evaluator, FTLPromptSafety, Score, ScoreStatus
 
 from .guardrails_client import GuardrailsClient
 from .promptfoo_parser import SCORED_CATEGORIES
+from .resilience import with_retry
 
 SAFETY_FLAG_SCORE_NAME = "max_risk_prob"
 SAFETY_FLAG_THRESHOLD = 0.5
@@ -72,7 +73,7 @@ class GuardrailDetectionEvaluator(Evaluator):
 
     def _check_safety(self, prompt: str) -> tuple[bool, str | None, dict[str, float]]:
         try:
-            scores = self._safety.score(text=prompt)
+            scores = with_retry(lambda: self._safety.score(text=prompt))
         except Exception as e:  # noqa: BLE001 - recorded as an error, not a miss
             return False, str(e), {}
         scores = scores if isinstance(scores, list) else [scores]

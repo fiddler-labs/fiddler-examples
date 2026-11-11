@@ -23,10 +23,10 @@ to hand-curate an adversarial test set.
 
 | Component | Version |
 |---|---|
-| Fiddler SDK (`fiddler-evals`) | 0.7.0rc1 |
+| Fiddler SDK (`fiddler-evals`) | 0.7.0 |
 | promptfoo | 0.124.1 |
-| Python | 3.14 (requires 3.11+) |
-| Last verified | 2026-10-21 |
+| Python | 3.15 (requires 3.11+) |
+| Last verified | 2026-11-06 |
 
 Newer versions will likely work, but the Fiddler and promptfoo APIs this
 example calls may change over time.
@@ -280,11 +280,17 @@ you**, it should check `runs/` before calling `generate`. See
   for its one-time email prompt. Run
   `npx promptfoo@0.124.1 config set email you@company.com` as a setup step.
   The timeout defaults to 30 minutes; change it with `--timeout`.
+- **"Couldn't reach Fiddler"**: `run` couldn't connect to your instance, or
+  it stopped responding, while creating the dataset. It exits with code 1.
+  Check `FIDDLER_URL` and that the instance is up.
 - **Errors in the scorecard**: a guardrail or task call failed for those
-  prompts. The run continues, the failed prompts are excluded from the rate,
-  and `run` exits with code 2. If every prompt errors, check `FIDDLER_URL`
-  and `FIDDLER_API_KEY`. `guardrails_client.py` logs the raw response when
-  it doesn't recognize the shape, for example after a Fiddler API change.
+  prompts. Every Fiddler call has a timeout (10 seconds to connect, 60 to
+  respond) and is retried once if the connection drops, so these are calls
+  that failed twice. The run continues, the failed prompts are excluded from
+  the rate, and `run` exits with code 2. The message under the scorecard says
+  whether it looks like a connection problem (usually temporary; rerun) or a
+  rejected API key. `guardrails_client.py` also logs the raw response when it
+  doesn't recognize the shape, for example after a Fiddler API change.
 
 ## Project layout
 
@@ -295,6 +301,7 @@ src/promptfoo_fiddler_redteam/
   promptfoo_parser.py   redteam.yaml -> normalized, categorized test cases
   fiddler_bridge.py     Project/Application/Dataset creation + population
   guardrails_client.py  REST client for the sensitive-information endpoint
+  resilience.py         timeouts, one retry on dropped connections, readable errors
   evaluators.py         task() + GuardrailDetectionEvaluator (safety via FTLPromptSafety)
   experiment_runner.py  wires it all into fiddler_evals.evaluate()
   report.py             per-category and per-plugin scorecard (console + CSV)

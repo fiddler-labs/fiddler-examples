@@ -54,6 +54,7 @@ SCORED_CATEGORIES = ("pii", "phi", "safety")
 
 
 def _category_for_plugin(plugin_id: str) -> str:
+    # Match on the family before the first colon: "harmful:hate" -> "harmful".
     prefix = plugin_id.split(":", 1)[0]
     return _CATEGORY_BY_PREFIX.get(prefix, "other")
 

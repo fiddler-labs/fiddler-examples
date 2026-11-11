@@ -5,15 +5,35 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import requests
 from fiddler_evals import Application, Dataset, Project, init
 from fiddler_evals.pydantic_models.dataset import NewDatasetItem
 
 from .config import FiddlerSettings
 from .promptfoo_parser import RedteamTestCase
+from .resilience import FIDDLER_TIMEOUT, with_retry
+
+
+def check_reachable(settings: FiddlerSettings) -> None:
+    """Fail fast if Fiddler is down or rejects the key.
+
+    The SDK retries connection failures several times on its own, so an
+    unreachable instance can take minutes to surface through init(). One
+    plain request (plus our single retry) answers the question in seconds.
+    """
+    response = with_retry(
+        lambda: requests.get(
+            f"{settings.url}/v3/server-info",
+            headers={"Authorization": f"Bearer {settings.api_key}"},
+            timeout=FIDDLER_TIMEOUT,
+        )
+    )
+    response.raise_for_status()
 
 
 def connect(settings: FiddlerSettings) -> Application:
-    init(url=settings.url, token=settings.api_key)
+    check_reachable(settings)
+    init(url=settings.url, token=settings.api_key, timeout=FIDDLER_TIMEOUT)
     project = Project.get_or_create(name=settings.project)
     application = Application.get_or_create(
         name=settings.application, project_id=project.id

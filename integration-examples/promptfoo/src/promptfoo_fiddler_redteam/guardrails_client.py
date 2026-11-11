@@ -33,6 +33,8 @@ from typing import Any
 
 import requests
 
+from .resilience import FIDDLER_TIMEOUT, with_retry
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,7 +46,12 @@ class GuardrailResult:
 
 
 class GuardrailsClient:
-    def __init__(self, base_url: str, api_key: str, timeout: float = 30.0):
+    def __init__(
+        self,
+        base_url: str,
+        api_key: str,
+        timeout: float | tuple[float, float] = FIDDLER_TIMEOUT,
+    ):
         self._base_url = base_url.rstrip("/")
         self._session = requests.Session()
         self._session.headers.update(
@@ -53,8 +60,10 @@ class GuardrailsClient:
         self._timeout = timeout
 
     def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
-        resp = self._session.post(
-            f"{self._base_url}{path}", json=payload, timeout=self._timeout
+        resp = with_retry(
+            lambda: self._session.post(
+                f"{self._base_url}{path}", json=payload, timeout=self._timeout
+            )
         )
         resp.raise_for_status()
         return resp.json()
