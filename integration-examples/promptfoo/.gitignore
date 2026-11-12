@@ -1,0 +1,44 @@
+# --- Secrets / credentials -------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+
+# --- Unpublished / internal material ---------------------------------------
+# Blog drafts, PDFs and screenshots live here locally; never publish.
+/docs/
+
+# --- Generated red-team output (adversarial prompts + scores) --------------
+/runs/
+/out/
+redteam.yaml
+scorecard.csv
+misses.csv
+*.log
+.promptfoo/
+
+# --- Python ---------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+*.egg-info
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Editors / OS / local agent settings ----------------------------------
+.idea/
+.vscode/
+.DS_Store
+.claude/settings.local.json
