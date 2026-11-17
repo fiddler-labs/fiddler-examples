@@ -1,0 +1,5 @@
+# The task files and results must be plain git files, not LFS pointers, or a
+# clone without git-lfs cannot run setup.sh or reproduce_claims.py. Override the
+# repo-wide LFS rule for JSON here.
+*.json  -filter diff merge text
+*.gz    -filter -diff -merge binary
