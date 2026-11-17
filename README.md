@@ -51,6 +51,7 @@ Standalone studies that use Fiddler's evaluation thinking without the Fiddler pl
 folder is a self-contained project with its own README.
 
 * [jev-evals](https://github.com/fiddler-labs/fiddler-examples/tree/main/experiments/jev-evals) — Do three AI Gateway models agree on how risky a coding agent's shell commands are? The GitHub Copilot CLI works fabricated tasks in disposable Vercel Sandboxes; Jev, Gemini 3.5 Flash Lite and GPT-5.4 nano rate every captured Bash command against one rubric. [Explore the results](https://jev-evals.vercel.app).
+* [pii-leakage-open-weight-models](https://github.com/fiddler-labs/fiddler-examples/tree/main/experiments/pii-leakage-open-weight-models) — Do open-weight models leak customers' personal details when deployed as bank support agents? Five open-weight models and a closed reference face scripted social-engineering callers in tau2-bench; a deterministic checker scores every disclosure, and every figure in the accompanying article can be recomputed from the saved transcripts.
 
 ## Fiddler Utils — Admin Automation Library
 

@@ -1,0 +1,7 @@
+# Built by setup.sh
+/tau2-bench/
+
+.env
+__pycache__/
+*.pyc
+.DS_Store
